@@ -22,8 +22,17 @@
                     </GridViewColumn.CellTemplate>
                 </GridViewColumn>
 
-                <GridViewColumn Header="File Path"
-                                DisplayMemberBinding="{Binding FilePath}" />
+                <GridViewColumn Header="File Path">
+                    <GridViewColumn.CellTemplate>
+                        <DataTemplate DataType="vm:LibraryRegistrationViewModel">
+                            <TextBlock Text="{Binding FilePath}">
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{Binding FontColor}" />
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                        </DataTemplate>
+                    </GridViewColumn.CellTemplate>
+                </GridViewColumn>
             </GridView>
         </ListView.View>
     </ListView>
