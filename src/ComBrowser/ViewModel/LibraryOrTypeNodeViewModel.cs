@@ -22,6 +22,11 @@ namespace ComBrowser.ViewModel
                 ChildNodes.Add(new LibraryOrTypeNodeViewModel(e));
                 TypesOrMembers.Add(new MemberViewModel(e));
             }
+            foreach (var t in library.Types)
+            {
+                ChildNodes.Add(new LibraryOrTypeNodeViewModel(t));
+                TypesOrMembers.Add(new MemberViewModel(t));
+            }
         }
 
         private LibraryOrTypeNodeViewModel(UserDefinedType userDefinedType)
@@ -42,6 +47,15 @@ namespace ComBrowser.ViewModel
         {
             Name = enumType.Name;
             foreach (var m in enumType.Members)
+            {
+                TypesOrMembers.Add(new MemberViewModel(m));
+            }
+        }
+
+        private LibraryOrTypeNodeViewModel(Type type)
+        {
+            Name = type.Name;
+            foreach (var m in type.TypeMembers)
             {
                 TypesOrMembers.Add(new MemberViewModel(m));
             }

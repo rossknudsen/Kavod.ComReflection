@@ -84,6 +84,7 @@
     <Compile Include="Members\Field.cs" />
     <Compile Include="Members\Function.cs" />
     <Compile Include="Members\Method.cs" />
+    <Compile Include="Types\Type.cs" />
     <Compile Include="Types\Any.cs" />
     <Compile Include="Types\Array.cs" />
     <Compile Include="Types\Boolean.cs" />

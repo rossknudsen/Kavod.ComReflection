@@ -15,6 +15,7 @@ using Enum = Kavod.ComReflection.Types.Enum;
 using Object = Kavod.ComReflection.Types.Object;
 using Single = Kavod.ComReflection.Types.Single;
 using String = Kavod.ComReflection.Types.String;
+using Type = Kavod.ComReflection.Types.Type;
 
 namespace Kavod.ComReflection
 {
@@ -25,6 +26,7 @@ namespace Kavod.ComReflection
         private List<TypeInfoAndTypeAttr> _infoAndAttrs;
         private List<UserDefinedType> _udts;
         private List<Enum> _enums;
+        private List<Type> _types;
 
         internal TypeLibrary(string filePath, TypeLibraries typeLibraries) 
             : this(filePath, ComHelper.LoadTypeLibrary(filePath), typeLibraries)
@@ -45,7 +47,7 @@ namespace Kavod.ComReflection
             // TODO there is additional information in the TypeLibAttr class of interest.
 
             CreateTypeInformation();
-            BuildTypeMembers();
+            BuildUserDefinedTypeMembers();
         }
 
         private void CreateTypeInformation()
@@ -56,6 +58,7 @@ namespace Kavod.ComReflection
             // build the basic list of types.
             _udts = new List<UserDefinedType>();
             _enums = new List<Enum>();
+            _types = new List<Type>();
             foreach (var info in _infoAndAttrs)
             {
                 switch (info.TypeAttr.typekind)
@@ -66,6 +69,10 @@ namespace Kavod.ComReflection
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_RECORD:
+                        var typeMembers = BuildTypeMembers(info.Name);
+                        _types.Add(new Type(info.Name, typeMembers));
+                        break;
+
                     case ComTypes.TYPEKIND.TKIND_MODULE:
                     case ComTypes.TYPEKIND.TKIND_INTERFACE:
                     case ComTypes.TYPEKIND.TKIND_DISPATCH:
@@ -76,6 +83,24 @@ namespace Kavod.ComReflection
                     default:
                         _udts.Add(new UserDefinedType(info.Name));
                         break;
+                }
+            }
+        }
+
+        private IEnumerable<TypeMember> BuildTypeMembers(string typeName)
+        {
+            var info = _infoAndAttrs.First(i => i.Name == typeName);
+            foreach (var vardesc in ComHelper.GetTypeVariables(info))
+            {
+                var name = ComHelper.GetMemberName(info.TypeInfo, vardesc);
+                var type = GetType(vardesc.elemdescVar.tdesc, info.TypeInfo);
+                if (!ComHelper.IsConstant(vardesc))
+                {
+                    yield return new TypeMember(name, type, false);
+                }
+                else
+                {
+                    throw new NotImplementedException();
                 }
             }
         }
@@ -99,7 +124,7 @@ namespace Kavod.ComReflection
             }
         }
 
-        private void BuildTypeMembers()
+        private void BuildUserDefinedTypeMembers()
         {
             // add the implemented type references to each type.
             foreach (var currentUdt in _udts)
@@ -361,7 +386,7 @@ namespace Kavod.ComReflection
                     throw new Exception("it wasn't me");
                 }
                 var library = _typeLibraries.LoadLibrary(referencedTypeLib);
-                loadedType = library.VbaTypes.Single(t => t.Name == typeName);
+                loadedType = library.AllTypes.Single(t => t.Name == typeName);
             }
             return loadedType;
         }
@@ -374,6 +399,10 @@ namespace Kavod.ComReflection
 
         public IEnumerable<Enum> Enums => _enums;
 
-        public IEnumerable<Object> AllTypes => _udts.Concat<Object>(_enums);
+        public IEnumerable<Type> Types => _types;
+
+        public IEnumerable<Object> AllTypes => _udts
+            .Concat<Object>(_enums)
+            .Concat(_types);
     }
 }
