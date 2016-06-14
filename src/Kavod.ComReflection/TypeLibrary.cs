@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -10,6 +11,7 @@ using Boolean = Kavod.ComReflection.Types.Boolean;
 using Byte = Kavod.ComReflection.Types.Byte;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 using Double = Kavod.ComReflection.Types.Double;
+using Enum = Kavod.ComReflection.Types.Enum;
 using Object = Kavod.ComReflection.Types.Object;
 using Single = Kavod.ComReflection.Types.Single;
 using String = Kavod.ComReflection.Types.String;
@@ -22,6 +24,7 @@ namespace Kavod.ComReflection
         private readonly TypeLibraries _typeLibraries;
         private List<TypeInfoAndTypeAttr> _infoAndAttrs;
         private List<UserDefinedType> _udts;
+        private List<Enum> _enums;
 
         internal TypeLibrary(string filePath, TypeLibraries typeLibraries) 
             : this(filePath, ComHelper.LoadTypeLibrary(filePath), typeLibraries)
@@ -51,16 +54,57 @@ namespace Kavod.ComReflection
                              select new TypeInfoAndTypeAttr(info)).ToList();
 
             // build the basic list of types.
-            _udts = (from t in _infoAndAttrs
-                     select new UserDefinedType(t.Name)).ToList();
+            _udts = new List<UserDefinedType>();
+            _enums = new List<Enum>();
+            foreach (var info in _infoAndAttrs)
+            {
+                switch (info.TypeAttr.typekind)
+                {
+                    case ComTypes.TYPEKIND.TKIND_ENUM:
+                        var enumMembers = BuildEnumMembers(info.Name);
+                        _enums.Add(new Enum(info.Name, enumMembers));
+                        break;
+
+                    case ComTypes.TYPEKIND.TKIND_RECORD:
+                    case ComTypes.TYPEKIND.TKIND_MODULE:
+                    case ComTypes.TYPEKIND.TKIND_INTERFACE:
+                    case ComTypes.TYPEKIND.TKIND_DISPATCH:
+                    case ComTypes.TYPEKIND.TKIND_COCLASS:
+                    case ComTypes.TYPEKIND.TKIND_ALIAS:
+                    case ComTypes.TYPEKIND.TKIND_UNION:
+                    case ComTypes.TYPEKIND.TKIND_MAX:
+                    default:
+                        _udts.Add(new UserDefinedType(info.Name));
+                        break;
+                }
+            }
+        }
+
+        private IEnumerable<EnumMember> BuildEnumMembers(string enumName)
+        {
+            var info = _infoAndAttrs.First(i => i.Name == enumName);
+            foreach (var vardesc in ComHelper.GetTypeVariables(info))
+            {
+                var name = ComHelper.GetMemberName(info.TypeInfo, vardesc);
+                var type = GetType(vardesc.elemdescVar.tdesc, info.TypeInfo);
+                if (ComHelper.IsConstant(vardesc))
+                {
+                    var constantValue = ComHelper.GetConstantValue(vardesc);
+                    yield return new EnumMember(name, type, constantValue);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
         }
 
         private void BuildTypeMembers()
         {
             // add the implemented type references to each type.
-            foreach (var info in _infoAndAttrs)
+            foreach (var currentUdt in _udts)
             {
-                var currentUdt = _udts.First(udt => udt.Name == info.Name);
+                var info = _infoAndAttrs.First(i => i.Name == currentUdt.Name);
 
                 // build the fields and constants for each type.
                 foreach (var varDesc in ComHelper.GetTypeVariables(info))
@@ -300,12 +344,12 @@ namespace Kavod.ComReflection
             }
         }
 
-        private UserDefinedType FindUserDefinedType(string typeName, ComTypes.ITypeInfo refTypeInfo)
+        private Object FindUserDefinedType(string typeName, ComTypes.ITypeInfo refTypeInfo)
         {
-            Contract.Ensures(Contract.Result<UserDefinedType>() != null);
+            Contract.Ensures(Contract.Result<Object>() != null);
 
-            var loadedType = VbaTypes
-                .Concat(_typeLibraries.LoadedLibraries.SelectMany(l => l.VbaTypes))
+            var loadedType = AllTypes
+                .Concat(_typeLibraries.LoadedLibraries.SelectMany(l => l.AllTypes))
                 .FirstOrDefault(t => t.Name == typeName);
             if (loadedType == null)
             {
@@ -327,5 +371,9 @@ namespace Kavod.ComReflection
         public string FilePath { get; }
 
         public IEnumerable<UserDefinedType> VbaTypes => _udts;
+
+        public IEnumerable<Enum> Enums => _enums;
+
+        public IEnumerable<Object> AllTypes => _udts.Concat<Object>(_enums);
     }
 }

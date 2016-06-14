@@ -91,6 +91,8 @@
     <Compile Include="Types\Currency.cs" />
     <Compile Include="Types\Date.cs" />
     <Compile Include="Types\Double.cs" />
+    <Compile Include="Types\Enum.cs" />
+    <Compile Include="Types\EnumMember.cs" />
     <Compile Include="Types\HResult.cs" />
     <Compile Include="Types\Integer.cs" />
     <Compile Include="Types\Long.cs" />

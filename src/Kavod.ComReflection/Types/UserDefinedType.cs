@@ -14,8 +14,6 @@ namespace Kavod.ComReflection.Types
             Name = name;
         }
 
-        public string Name { get; }
-
         public IEnumerable<Field> Fields => _fields;
 
         public IEnumerable<Method> Methods => _methods;

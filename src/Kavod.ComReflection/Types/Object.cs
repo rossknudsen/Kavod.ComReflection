@@ -10,6 +10,8 @@
 
         protected Object() { }
 
+        public string Name { get; protected set; }
+
         public virtual bool IsPrimitive { get; protected set; }
 
         public override string ToString() => nameof(Object);

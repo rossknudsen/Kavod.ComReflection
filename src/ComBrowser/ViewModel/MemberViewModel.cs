@@ -11,7 +11,7 @@ namespace ComBrowser.ViewModel
             Name = method.ToSignatureString();
         }
 
-        public MemberViewModel(UserDefinedType type)
+        public MemberViewModel(Object type)
         {
             Name = type.Name;
         }
