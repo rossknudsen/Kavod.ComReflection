@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using Kavod.ComReflection.Members;
-using Kavod.ComReflection.Types;
 
-namespace Kavod.ComReflection
+namespace Kavod.ComReflection.Types
 {
     public class UserDefinedType : Object
     {

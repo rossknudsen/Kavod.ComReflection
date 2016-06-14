@@ -1,6 +1,6 @@
 using GalaSoft.MvvmLight;
-using Kavod.ComReflection;
 using Kavod.ComReflection.Members;
+using Kavod.ComReflection.Types;
 
 namespace ComBrowser.ViewModel
 {
