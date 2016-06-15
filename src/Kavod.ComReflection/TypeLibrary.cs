@@ -24,9 +24,10 @@ namespace Kavod.ComReflection
         private readonly ComTypes.ITypeLib _typeLib;
         private readonly TypeLibraries _typeLibraries;
         private List<TypeInfoAndTypeAttr> _infoAndAttrs;
-        private List<UserDefinedType> _udts;
-        private List<Enum> _enums;
-        private List<Type> _types;
+        private List<UserDefinedType> _udts = new List<UserDefinedType>();
+        private List<Enum> _enums = new List<Enum>();
+        private List<Type> _types = new List<Type>();
+        private List<Module> _modules = new List<Module>();
 
         internal TypeLibrary(string filePath, TypeLibraries typeLibraries) 
             : this(filePath, ComHelper.LoadTypeLibrary(filePath), typeLibraries)
@@ -56,24 +57,22 @@ namespace Kavod.ComReflection
                              select new TypeInfoAndTypeAttr(info)).ToList();
 
             // build the basic list of types.
-            _udts = new List<UserDefinedType>();
-            _enums = new List<Enum>();
-            _types = new List<Type>();
             foreach (var info in _infoAndAttrs)
             {
                 switch (info.TypeAttr.typekind)
                 {
                     case ComTypes.TYPEKIND.TKIND_ENUM:
-                        var enumMembers = BuildEnumMembers(info.Name);
-                        _enums.Add(new Enum(info.Name, enumMembers));
+                        _enums.Add(new Enum(info.Name));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_RECORD:
-                        var typeMembers = BuildTypeMembers(info.Name);
-                        _types.Add(new Type(info.Name, typeMembers));
+                        _types.Add(new Type(info.Name));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_MODULE:
+                        _modules.Add(new Module(info.Name));
+                        break;
+
                     case ComTypes.TYPEKIND.TKIND_INTERFACE:
                     case ComTypes.TYPEKIND.TKIND_DISPATCH:
                     case ComTypes.TYPEKIND.TKIND_COCLASS:
@@ -85,11 +84,75 @@ namespace Kavod.ComReflection
                         break;
                 }
             }
+
+            AddEnumMembers();
+            AddTypeMembers();
+            AddModuleMembers();
         }
 
-        private IEnumerable<TypeMember> BuildTypeMembers(string typeName)
+        private void AddTypeMembers()
         {
-            var info = _infoAndAttrs.First(i => i.Name == typeName);
+            foreach (var type in _types)
+            {
+                var info = _infoAndAttrs.First(i => i.Name == type.Name);
+                foreach (var member in BuildTypeMembers(info))
+                {
+                    type.AddMember(member);
+                }
+            }
+        }
+
+        private void AddEnumMembers()
+        {
+            foreach (var e in _enums)
+            {
+                var info = _infoAndAttrs.First(i => i.Name == e.Name);
+                foreach (var member in BuildEnumMembers(info))
+                {
+                    e.AddMember(member);
+                }
+            }
+        }
+
+        private void AddModuleMembers()
+        {
+            foreach (var module in _modules)
+            {
+                var info = _infoAndAttrs.First(i => i.Name == module.Name);
+                foreach (var method in BuildModuleMethods(info))
+                {
+                    module.AddMethod(method);
+                }
+                foreach (var field in BuildModuleFields(info))
+                {
+                    module.AddField(field);
+                }
+            }
+        }
+
+        private IEnumerable<Field> BuildModuleFields(TypeInfoAndTypeAttr info)
+        {
+            foreach (var vardesc in ComHelper.GetTypeVariables(info))
+            {
+                var name = ComHelper.GetMemberName(info.TypeInfo, vardesc);
+                var type = GetType(vardesc.elemdescVar.tdesc, info.TypeInfo);
+                var isConstant = ComHelper.IsConstant(vardesc);
+                yield return new Field(name, type, isConstant);
+            }
+        }
+
+        private IEnumerable<Method> BuildModuleMethods(TypeInfoAndTypeAttr info)
+        {
+            // build the methods for each type.
+            var methods = (from funcDesc in ComHelper.GetFuncDescs(info)
+                           select BuildMethod(funcDesc, info.TypeInfo)).ToList();
+
+            ConsolidateProperties(methods);
+            return methods;
+        }
+
+        private IEnumerable<TypeMember> BuildTypeMembers(TypeInfoAndTypeAttr info)
+        {
             foreach (var vardesc in ComHelper.GetTypeVariables(info))
             {
                 var name = ComHelper.GetMemberName(info.TypeInfo, vardesc);
@@ -105,9 +168,8 @@ namespace Kavod.ComReflection
             }
         }
 
-        private IEnumerable<EnumMember> BuildEnumMembers(string enumName)
+        private IEnumerable<EnumMember> BuildEnumMembers(TypeInfoAndTypeAttr info)
         {
-            var info = _infoAndAttrs.First(i => i.Name == enumName);
             foreach (var vardesc in ComHelper.GetTypeVariables(info))
             {
                 var name = ComHelper.GetMemberName(info.TypeInfo, vardesc);
@@ -401,8 +463,11 @@ namespace Kavod.ComReflection
 
         public IEnumerable<Type> Types => _types;
 
+        public IEnumerable<Module> Modules => _modules;
+
         public IEnumerable<Object> AllTypes => _udts
             .Concat<Object>(_enums)
-            .Concat(_types);
+            .Concat(_types)
+            .Concat(_modules);
     }
 }

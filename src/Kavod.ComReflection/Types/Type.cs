@@ -5,17 +5,21 @@ namespace Kavod.ComReflection.Types
 {
     public class Type : Object
     {
-        private readonly List<TypeMember> _members;
+        private readonly List<TypeMember> _members = new List<TypeMember>();
 
-        public Type(string name, IEnumerable<TypeMember> members)
+        public Type(string name)
         {
-            _members = new List<TypeMember>(members);
             Name = name;
         }
 
         public IEnumerable<TypeMember> TypeMembers => _members;
 
         public override string ToString() => Name;
+
+        public void AddMember(TypeMember member)
+        {
+            _members.Add(member);
+        }
     }
 
     public class TypeMember : Field

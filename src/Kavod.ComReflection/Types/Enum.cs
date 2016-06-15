@@ -4,16 +4,20 @@ namespace Kavod.ComReflection.Types
 {
     public class Enum : Object
     {
-        private readonly List<EnumMember> _members;
+        private readonly List<EnumMember> _members = new List<EnumMember>();
 
-        public Enum(string name, IEnumerable<EnumMember> members)
+        public Enum(string name)
         {
             Name = name;
-            _members = new List<EnumMember>(members);
         }
 
         public IEnumerable<EnumMember> Members => _members;
 
         public override string ToString() => Name;
+
+        public void AddMember(EnumMember member)
+        {
+            _members.Add(member);
+        }
     }
 }
