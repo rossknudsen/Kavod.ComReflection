@@ -6,10 +6,7 @@ namespace Kavod.ComReflection.Types
     {
         private readonly List<EnumMember> _members = new List<EnumMember>();
 
-        public Enum(string name)
-        {
-            Name = name;
-        }
+        public Enum(string name) : base(name) { }
 
         public IEnumerable<EnumMember> Members => _members;
 

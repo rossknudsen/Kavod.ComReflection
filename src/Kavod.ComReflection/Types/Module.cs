@@ -8,10 +8,7 @@ namespace Kavod.ComReflection.Types
         private readonly List<Field> _fields = new List<Field>();
         private readonly List<Method> _methods = new List<Method>();
 
-        internal Module(string name)
-        {
-            Name = name;
-        }
+        internal Module(string name) : base(name) { }
 
         public IEnumerable<Field> Fields => _fields;
 

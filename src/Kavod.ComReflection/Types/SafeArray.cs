@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Types
     {
         public static readonly SafeArray Instance = new SafeArray();
 
-        private SafeArray() { }
+        private SafeArray() : base(nameof(SafeArray)) { }
 
         public override string ToString() => nameof(SafeArray);
     }

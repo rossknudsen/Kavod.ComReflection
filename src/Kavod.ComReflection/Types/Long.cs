@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Types
     {
         public static Long Instance = new Long();
 
-        private Long()
+        private Long() : base(nameof(Long))
         {
             IsPrimitive = true;
         }

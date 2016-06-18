@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Types
     {
         public static Currency Instance = new Currency();
 
-        private Currency()
+        private Currency() : base(nameof(Currency))
         {
             IsPrimitive = true;
         }

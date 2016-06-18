@@ -7,10 +7,7 @@ namespace Kavod.ComReflection.Types
     {
         private readonly List<TypeMember> _members = new List<TypeMember>();
 
-        public Type(string name)
-        {
-            Name = name;
-        }
+        public Type(string name) : base(name) { }
 
         public IEnumerable<TypeMember> TypeMembers => _members;
 

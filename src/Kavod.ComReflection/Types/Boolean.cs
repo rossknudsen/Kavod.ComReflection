@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Types
     {
         public static Boolean Instance = new Boolean();
 
-        private Boolean()
+        private Boolean() : base(nameof(Boolean))
         {
             IsPrimitive = true;
         }

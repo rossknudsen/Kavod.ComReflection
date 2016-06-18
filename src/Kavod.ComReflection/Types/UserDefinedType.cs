@@ -9,10 +9,7 @@ namespace Kavod.ComReflection.Types
         private readonly List<Method> _methods = new List<Method>();
         private readonly List<Object> _implementedTypes = new List<Object>();
 
-        internal UserDefinedType(string name)
-        {
-            Name = name;
-        }
+        internal UserDefinedType(string name) : base(name) { }
 
         public IEnumerable<Field> Fields => _fields;
 

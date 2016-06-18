@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Types
     {
         public static String Instance = new String();
 
-        private String()
+        private String() : base(nameof(String))
         {
             IsPrimitive = true;
         }

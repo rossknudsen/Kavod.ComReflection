@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Types
     {
         public static readonly UnsupportedVariant Instance = new UnsupportedVariant();
 
-        private UnsupportedVariant() { }
+        private UnsupportedVariant() : base(nameof(UnsupportedVariant)) { }
 
         public override string ToString() => $"<{nameof(UnsupportedVariant)}>";
     }

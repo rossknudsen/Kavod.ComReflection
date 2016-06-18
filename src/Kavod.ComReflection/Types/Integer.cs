@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Types
     {
         public static Integer Instance = new Integer();
 
-        private Integer()
+        private Integer() : base(nameof(Integer))
         {
             IsPrimitive = true;
         }

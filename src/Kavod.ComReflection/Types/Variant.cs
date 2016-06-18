@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Types
     {
         public static Variant Instance = new Variant();
 
-        private Variant() { }
+        private Variant() : base(nameof(Variant)) { }
 
         public override string ToString() => nameof(Variant);
     }

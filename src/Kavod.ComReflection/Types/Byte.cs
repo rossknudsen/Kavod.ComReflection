@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Types
     {
         public static Byte Instance = new Byte();
 
-        private Byte()
+        private Byte() : base(nameof(Byte))
         {
             IsPrimitive = true;
         }

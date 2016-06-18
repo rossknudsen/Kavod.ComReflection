@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Types
     {
         public static Single Instance = new Single();
 
-        private Single()
+        private Single() : base(nameof(Single))
         {
             IsPrimitive = true;
         }

@@ -16,7 +16,7 @@ namespace Kavod.ComReflection.Types
             return Instances[arrayType];
         }
 
-        private Array(Object arrayType)
+        private Array(Object arrayType) : base($"{nameof(Array)}(Of {arrayType.Name})")
         {
             ArrayType = arrayType;
         }

@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Types
     {
         public static Date Instance = new Date();
 
-        private Date()
+        private Date() : base(nameof(Date))
         {
             IsPrimitive = true;
         }
