@@ -49,6 +49,13 @@ namespace Kavod.ComReflection
             return refTypeName;
         }
 
+        internal static ComTypes.ITypeInfo GetRefTypeInfo(ComTypes.TYPEDESC tdesc, ComTypes.ITypeInfo context)
+        {
+            ComTypes.ITypeInfo refTypeInfo;
+            context.GetRefTypeInfo(tdesc.lpValue.ToInt32(), out refTypeInfo);
+            return refTypeInfo;
+        }
+
         internal static string GetTypeName(ComTypes.ITypeInfo refTypeInfo)
         {
             string refTypeName;

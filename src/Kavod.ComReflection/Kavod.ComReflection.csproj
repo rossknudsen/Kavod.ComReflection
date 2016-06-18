@@ -84,6 +84,8 @@
     <Compile Include="Members\Field.cs" />
     <Compile Include="Members\Function.cs" />
     <Compile Include="Members\Method.cs" />
+    <Compile Include="Types\Dispatch.cs" />
+    <Compile Include="Types\Interface.cs" />
     <Compile Include="Types\Module.cs" />
     <Compile Include="Types\Type.cs" />
     <Compile Include="Types\Any.cs" />
@@ -115,7 +117,6 @@
     <Compile Include="Types\Variant.cs" />
     <Compile Include="Types\UserDefinedType.cs" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

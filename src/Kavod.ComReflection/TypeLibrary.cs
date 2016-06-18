@@ -28,6 +28,8 @@ namespace Kavod.ComReflection
         private List<Enum> _enums = new List<Enum>();
         private List<Type> _types = new List<Type>();
         private List<Module> _modules = new List<Module>();
+        private List<Interface> _interfaces = new List<Interface>();
+        private List<Dispatch> _dispatches = new List<Dispatch>();
 
         internal TypeLibrary(string filePath, TypeLibraries typeLibraries) 
             : this(filePath, ComHelper.LoadTypeLibrary(filePath), typeLibraries)
@@ -56,38 +58,87 @@ namespace Kavod.ComReflection
             _infoAndAttrs = (from info in ComHelper.GetTypeInformation(_typeLib)
                              select new TypeInfoAndTypeAttr(info)).ToList();
 
+            var enums = new List<TypeInfoAndTypeAttr>();
+            var records = new List<TypeInfoAndTypeAttr>();
+            var modules = new List<TypeInfoAndTypeAttr>();
+            var interfaces = new List<TypeInfoAndTypeAttr>();
+            var dispatchInterfaces = new List<TypeInfoAndTypeAttr>();
+            var coclasses = new List<TypeInfoAndTypeAttr>();
+            var aliases = new List<TypeInfoAndTypeAttr>();
             // build the basic list of types.
             foreach (var info in _infoAndAttrs)
             {
                 switch (info.TypeAttr.typekind)
                 {
                     case ComTypes.TYPEKIND.TKIND_ENUM:
-                        _enums.Add(new Enum(info.Name));
+                        enums.Add(info);
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_RECORD:
-                        _types.Add(new Type(info.Name));
+                        records.Add(info);
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_MODULE:
-                        _modules.Add(new Module(info.Name));
+                        modules.Add(info);
                         break;
 
-                    case ComTypes.TYPEKIND.TKIND_INTERFACE:
-                    case ComTypes.TYPEKIND.TKIND_DISPATCH:
+                    case ComTypes.TYPEKIND.TKIND_INTERFACE:   // VTABLE only, not dual.
+                        interfaces.Add(info);
+                        break;
+
+                    case ComTypes.TYPEKIND.TKIND_DISPATCH:    // true dispatch type or dual type.
+                        dispatchInterfaces.Add(info);
+                        break;
+
                     case ComTypes.TYPEKIND.TKIND_COCLASS:
+                        coclasses.Add(info);
+                        break;
+
                     case ComTypes.TYPEKIND.TKIND_ALIAS:
+                        aliases.Add(info);
+                        break;
+
                     case ComTypes.TYPEKIND.TKIND_UNION:
                     case ComTypes.TYPEKIND.TKIND_MAX:
                     default:
-                        _udts.Add(new UserDefinedType(info.Name));
-                        break;
+                        throw new NotImplementedException();
                 }
+            }
+            _enums.AddRange(enums.Select(e => new Enum(e.Name)));
+            _types.AddRange(records.Select(r => new Type(r.Name)));
+            _modules.AddRange(modules.Select(m => new Module(m.Name)));
+            _interfaces.AddRange(interfaces.Select(i => new Interface(i.Name)));
+            _udts.AddRange(dispatchInterfaces.Select(d => new UserDefinedType(d.Name)));
+            //_dispatches.AddRange(dispatchInterfaces.Select(d => new Dispatch(d.Name)));
+            _udts.AddRange(coclasses.Select(c => new UserDefinedType(c.Name)));
+            foreach (var a in aliases)
+            {
+                AddAliasToType(a);
+                //_udts.Add(new UserDefinedType(info.Name));  Not sure if I should have explicit Aliases or not.
             }
 
             AddEnumMembers();
+            AddInterfaceMembers();
             AddTypeMembers();
             AddModuleMembers();
+        }
+
+        private void AddAliasToType(TypeInfoAndTypeAttr info)
+        {
+            var type = GetType(info.TypeAttr.tdescAlias, info.TypeInfo);
+            type.AddAlias(info.Name);
+        }
+
+        private void AddInterfaceMembers()
+        {
+            foreach (var @interface in _interfaces)
+            {
+                var info = _infoAndAttrs.First(i => i.Name == @interface.Name);
+                foreach (var method in BuildModuleMethods(info))
+                {
+                    @interface.AddMethod(method);
+                }
+            }
         }
 
         private void AddTypeMembers()
@@ -219,21 +270,11 @@ namespace Kavod.ComReflection
                 // add the implemented interfaces.
                 foreach (var inherited in ComHelper.GetInheritedTypeInfos(info))
                 {
-                    var implementedName = ComHelper.GetTypeName(inherited);
-                    Object implemented = _udts.FirstOrDefault(n => n.Name == implementedName);
+                    string implementedName = ComHelper.GetTypeName(inherited);
+                    Object implemented = FindExistingType(implementedName);
                     if (implemented == null)
                     {
-                        switch (implementedName)
-                        {
-                            case "IDispatch":
-                                implemented = Object.GetInstance();
-                                break;
-                            case "IUnknown":
-                                implemented = Unknown.Instance;
-                                break;
-                            default:
-                                throw new Exception();
-                        }
+                        throw new NotImplementedException();
                     }
                     currentUdt.AddImplementedType(implemented);
                 }
@@ -337,10 +378,18 @@ namespace Kavod.ComReflection
                     return GetType(tdesc2, context);
 
                 case VarEnum.VT_USERDEFINED:
-                    ComTypes.ITypeInfo refTypeInfo;
-                    context.GetRefTypeInfo(tdesc.lpValue.ToInt32(), out refTypeInfo);
+                    if (context == null)
+                    {
+                        throw new InvalidOperationException($"{nameof(context)} is null.  This is required for {VarEnum.VT_USERDEFINED}");
+                    }
+                    var refTypeInfo = ComHelper.GetRefTypeInfo(tdesc, context);
                     var typeName = ComHelper.GetTypeName(refTypeInfo);
-                    var loadedType = FindUserDefinedType(typeName, refTypeInfo);
+                    var loadedType = FindExistingType(typeName);
+                    if (loadedType == null)
+                    {
+                        LoadTypeLibrary(refTypeInfo);
+                        loadedType = FindExistingType(typeName);
+                    }
                     return loadedType;
 
                 case VarEnum.VT_CARRAY:
@@ -431,31 +480,54 @@ namespace Kavod.ComReflection
             }
         }
 
-        private Object FindUserDefinedType(string typeName, ComTypes.ITypeInfo refTypeInfo)
+        private Object FindExistingType(string typeName)
         {
-            Contract.Ensures(Contract.Result<Object>() != null);
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(typeName));
 
-            var loadedType = AllTypes
+            var query = AllTypes
                 .Concat(_typeLibraries.LoadedLibraries.SelectMany(l => l.AllTypes))
-                .FirstOrDefault(t => t.Name == typeName);
-            if (loadedType == null)
+                .Where(t => t.MatchNameOrAlias(typeName));
+
+            return query.FirstOrDefault();
+        }
+
+        private void LoadTypeLibrary(ComTypes.ITypeInfo info)
+        {
+            Contract.Requires<ArgumentNullException>(info != null);
+
+            ComTypes.ITypeLib referencedTypeLib;
+            var index = -1;
+            info.GetContainingTypeLib(out referencedTypeLib, out index);
+            if (index == -1)
             {
-                ComTypes.ITypeLib referencedTypeLib;
-                var index = -1;
-                refTypeInfo.GetContainingTypeLib(out referencedTypeLib, out index);
-                if (index == -1)
-                {
-                    throw new Exception("it wasn't me");
-                }
-                var library = _typeLibraries.LoadLibrary(referencedTypeLib);
-                loadedType = library.AllTypes.Single(t => t.Name == typeName);
+                throw new Exception("it wasn't me");
             }
-            return loadedType;
+            _typeLibraries.LoadLibrary(referencedTypeLib);
         }
 
         public string Name { get; }
 
         public string FilePath { get; }
+
+        public IEnumerable<Object> PrimitiveTypes => new Object[]
+        {
+            Boolean.Instance,
+            String.Instance,
+            Long.Instance,
+            Integer.Instance,
+            UnsupportedVariant.Instance,
+            Variant.Instance,
+            Byte.Instance,
+            Single.Instance,
+            Double.Instance,
+            Object.GetInstance(),
+            Currency.Instance,
+            Date.Instance,
+            Any.Instance,
+            HResult.Instance,
+            SafeArray.Instance,
+            Unknown.Instance
+        };
 
         public IEnumerable<UserDefinedType> VbaTypes => _udts;
 
@@ -465,9 +537,16 @@ namespace Kavod.ComReflection
 
         public IEnumerable<Module> Modules => _modules;
 
-        public IEnumerable<Object> AllTypes => _udts
-            .Concat<Object>(_enums)
+        public IEnumerable<Interface> Interfaces => _interfaces;
+
+        public IEnumerable<Dispatch> DispatchInterfaces => _dispatches;
+
+        public IEnumerable<Object> AllTypes => PrimitiveTypes
+            .Concat(_udts)
+            .Concat(_enums)
             .Concat(_types)
-            .Concat(_modules);
+            .Concat(_modules)
+            .Concat(_interfaces)
+            .Concat(_dispatches);
     }
 }

@@ -32,6 +32,16 @@ namespace ComBrowser.ViewModel
                 ChildNodes.Add(new LibraryOrTypeNodeViewModel(m));
                 TypesOrMembers.Add(new MemberViewModel(m));
             }
+            foreach (var i in library.Interfaces)
+            {
+                ChildNodes.Add(new LibraryOrTypeNodeViewModel(i));
+                TypesOrMembers.Add(new MemberViewModel(i));
+            }
+            foreach (var i in library.DispatchInterfaces)
+            {
+                ChildNodes.Add(new LibraryOrTypeNodeViewModel(i));
+                TypesOrMembers.Add(new MemberViewModel(i));
+            }
         }
 
         private LibraryOrTypeNodeViewModel(UserDefinedType userDefinedType)
@@ -77,6 +87,20 @@ namespace ComBrowser.ViewModel
             {
                 TypesOrMembers.Add(new MemberViewModel(m));
             }
+        }
+
+        private LibraryOrTypeNodeViewModel(Interface @interface)
+        {
+            Name = @interface.Name;
+            foreach (var m in @interface.Methods)
+            {
+                TypesOrMembers.Add(new MemberViewModel(m));
+            }
+        }
+
+        private LibraryOrTypeNodeViewModel(Dispatch dispatch)
+        {
+            Name = dispatch.Name;
         }
 
         public string Name { get; private set; }
