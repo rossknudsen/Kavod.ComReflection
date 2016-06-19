@@ -163,6 +163,14 @@
       <Name>Kavod.ComReflection</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\enum.png" />
+    <Resource Include="Resources\module.png" />
+    <Resource Include="Resources\type.png" />
+    <Resource Include="Resources\interface.png" />
+    <Resource Include="Resources\udt.png" />
+    <Resource Include="Resources\library.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

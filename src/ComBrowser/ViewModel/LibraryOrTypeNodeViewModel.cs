@@ -11,6 +11,7 @@ namespace ComBrowser.ViewModel
         {
             TypeLibrary = library;
             Name = library.Name;
+            IconUriSource = @"\Resources\library.png";
 
             foreach (var t in library.VbaTypes)
             {
@@ -47,6 +48,7 @@ namespace ComBrowser.ViewModel
         private LibraryOrTypeNodeViewModel(UserDefinedType userDefinedType)
         {
             Name = userDefinedType.Name;
+            IconUriSource = @"\Resources\udt.png";
 
             foreach (var f in userDefinedType.Fields)
             {
@@ -61,6 +63,7 @@ namespace ComBrowser.ViewModel
         private LibraryOrTypeNodeViewModel(Enum enumType)
         {
             Name = enumType.Name;
+            IconUriSource = @"\Resources\enum.png";
             foreach (var m in enumType.Members)
             {
                 TypesOrMembers.Add(new MemberViewModel(m));
@@ -70,6 +73,7 @@ namespace ComBrowser.ViewModel
         private LibraryOrTypeNodeViewModel(Type type)
         {
             Name = type.Name;
+            IconUriSource = @"\Resources\type.png";
             foreach (var m in type.TypeMembers)
             {
                 TypesOrMembers.Add(new MemberViewModel(m));
@@ -79,6 +83,7 @@ namespace ComBrowser.ViewModel
         private LibraryOrTypeNodeViewModel(Module module)
         {
             Name = module.Name;
+            IconUriSource = @"\Resources\module.png";
             foreach (var f in module.Fields)
             {
                 TypesOrMembers.Add(new MemberViewModel(f));
@@ -92,6 +97,7 @@ namespace ComBrowser.ViewModel
         private LibraryOrTypeNodeViewModel(Interface @interface)
         {
             Name = @interface.Name;
+            IconUriSource = @"\Resources\interface.png";
             foreach (var m in @interface.Methods)
             {
                 TypesOrMembers.Add(new MemberViewModel(m));
@@ -110,5 +116,7 @@ namespace ComBrowser.ViewModel
         public IList<MemberViewModel> TypesOrMembers { get; } = new List<MemberViewModel>();
 
         public TypeLibrary TypeLibrary { get; }
+
+        public string IconUriSource { get; private set; }
     }
 }
