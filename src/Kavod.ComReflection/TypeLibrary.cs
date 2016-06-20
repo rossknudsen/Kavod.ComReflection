@@ -125,14 +125,6 @@ namespace Kavod.ComReflection
             {
                 AddImplementedInterfaces(i);
             }
-            foreach (var d in DispatchInterfaces)
-            {
-                AddImplementedInterfaces(d);
-            }
-            foreach (var c in CoClasses)
-            {
-                AddImplementedInterfaces(c);
-            }
 
             AddEnumMembers();
             AddInterfaceMembers();
