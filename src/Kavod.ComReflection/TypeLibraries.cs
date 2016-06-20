@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 
@@ -28,6 +29,18 @@ namespace Kavod.ComReflection
             if (library == null)
             {
                 library = new TypeLibrary(typeLib, this);
+                _loadedLibraries.Add(library);
+            }
+            return library;
+        }
+
+        internal TypeLibrary LoadLibrary(Guid libGuid)
+        {
+            var library = LoadedLibraries.FirstOrDefault(l => l.Guid.Equals(libGuid));
+            if (library == null)
+            {
+                var reg = LibraryRegistration.GetComTypeRegistryEntry(libGuid);
+                library = new TypeLibrary(reg.FilePath, this);
                 _loadedLibraries.Add(library);
             }
             return library;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
 
@@ -35,6 +36,20 @@ namespace Kavod.ComReflection
             return dictionary.Values;
         }
 
+        public static LibraryRegistration GetComTypeRegistryEntry(Guid guid)
+        {
+            using (var clsidRootKey = Registry.ClassesRoot.OpenSubKey("TypeLib"))
+            using (var libKey = clsidRootKey?.OpenSubKey(guid.ToString("B")))
+            {
+                if (clsidRootKey == null || libKey == null)
+                {
+                    throw new InvalidOperationException();
+                }
+                var entry = EnumerateRegistryEntryVersions(libKey).First();
+                return new LibraryRegistration(entry.FilePath, entry.Name);
+            }
+        }
+
         private static IEnumerable<ComTypeRegistryEntry> GetComTypeRegistryEntries()
         {
             using (var clsidRootKey = Registry.ClassesRoot.OpenSubKey("TypeLib"))
@@ -54,46 +69,52 @@ namespace Kavod.ComReflection
                         continue;
                     }
                     
-                    // There can be more than one registered item for each GUID.
-                    foreach (var versionKey in EnumerateSubKeys(typeLibKey))
+                    foreach (var entry in EnumerateRegistryEntryVersions(typeLibKey))
+                        yield return entry;
+                }
+            }
+        }
+
+        private static IEnumerable<ComTypeRegistryEntry> EnumerateRegistryEntryVersions(RegistryKey typeLibKey)
+        {
+            // There can be more than one registered item for each GUID.
+            foreach (var versionKey in EnumerateSubKeys(typeLibKey))
+            {
+                var version = GetVersionInfo(GetCurrentKeyName(versionKey));
+
+                var name = (string) versionKey.GetValue("");
+                if (string.IsNullOrEmpty(name))
+                {
+                    continue;
+                }
+
+                foreach (var patchKey in EnumerateSubKeys(versionKey))
+                {
+                    var win32Path = string.Empty;
+                    var win64Path = string.Empty;
+
+                    foreach (var win32Key in EnumerateSubKeys(patchKey, k => k.Name.EndsWith("win32")))
                     {
-                        var version = GetVersionInfo(GetCurrentKeyName(versionKey));
-
-                        var name = (string)versionKey.GetValue("");
-                        if (string.IsNullOrEmpty(name))
+                        if (win32Key.Name.EndsWith("win32"))
                         {
-                            continue;
+                            win32Path = (string) win32Key.GetValue("") ?? string.Empty;
                         }
-
-                        foreach (var patchKey in EnumerateSubKeys(versionKey))
+                        else if (win32Key.Name.EndsWith("win64"))
                         {
-                            var win32Path = string.Empty;
-                            var win64Path = string.Empty;
-
-                            foreach (var win32Key in EnumerateSubKeys(patchKey, k => k.Name.EndsWith("win32")))
-                            {
-                                if (win32Key.Name.EndsWith("win32"))
-                                {
-                                    win32Path = (string)win32Key.GetValue("") ?? string.Empty;
-                                }
-                                else if (win32Key.Name.EndsWith("win64"))
-                                {
-                                    win64Path = (string)win32Key.GetValue("") ?? string.Empty;
-                                }
-                            }
-
-                            if (win64Path == string.Empty && win32Path == string.Empty)
-                            {
-                                continue;
-                            }
-
-                            yield return new ComTypeRegistryEntry()
-                            {
-                                FilePath = win32Path != string.Empty ? win32Path : win64Path,
-                                Name = name
-                            };
+                            win64Path = (string) win32Key.GetValue("") ?? string.Empty;
                         }
                     }
+
+                    if (win64Path == string.Empty && win32Path == string.Empty)
+                    {
+                        continue;
+                    }
+
+                    yield return new ComTypeRegistryEntry()
+                    {
+                        FilePath = win32Path != string.Empty ? win32Path : win64Path,
+                        Name = name
+                    };
                 }
             }
         }

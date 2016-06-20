@@ -21,6 +21,9 @@ namespace Kavod.ComReflection
 {
     public class TypeLibrary
     {
+        private const string StdOleLibGuidString = "{00020430-0000-0000-C000-000000000046}";
+        private static readonly Guid StdOleLibGuid = new Guid(StdOleLibGuidString);
+
         private readonly ComTypes.ITypeLib _typeLib;
         private readonly TypeLibraries _typeLibraries;
         private List<TypeInfoAndTypeAttr> _infoAndAttrs;
@@ -47,6 +50,7 @@ namespace Kavod.ComReflection
             _typeLibraries = typeLibraries;
 
             var typeAttr = ComHelper.GetTypeLibAttr(typeLib);
+            Guid = typeAttr.guid;
             // TODO there is additional information in the TypeLibAttr class of interest.
 
             CreateTypeInformation();
@@ -252,12 +256,11 @@ namespace Kavod.ComReflection
             var info = _infoAndAttrs.First(i => i.Name == type.Name);
             foreach (var inherited in ComHelper.GetInheritedTypeInfos(info))
             {
-                var implementedName = ComHelper.GetTypeName(inherited);
-                var implemented = FindExistingType(implementedName);
+                var implemented = FindExistingType(inherited);
                 if (implemented == null)
                 {
                     LoadTypeLibrary(inherited);
-                    implemented = FindExistingType(implementedName);
+                    implemented = FindExistingType(inherited);
                 }
                 type.AddImplementedType(implemented);
             }
@@ -360,20 +363,23 @@ namespace Kavod.ComReflection
                     return GetType(tdesc2, context);
 
                 case VarEnum.VT_USERDEFINED:
-                case VarEnum.VT_UNKNOWN:
                     if (context == null)
                     {
                         throw new InvalidOperationException($"{nameof(context)} is null.  This is required for {VarEnum.VT_USERDEFINED}");
                     }
                     var refTypeInfo = ComHelper.GetRefTypeInfo(tdesc, context);
-                    var typeName = ComHelper.GetTypeName(refTypeInfo);
-                    var loadedType = FindExistingType(typeName);
+                    var loadedType = FindExistingType(refTypeInfo);
                     if (loadedType == null)
                     {
                         LoadTypeLibrary(refTypeInfo);
-                        loadedType = FindExistingType(typeName);
+                        loadedType = FindExistingType(refTypeInfo);
                     }
                     return loadedType;
+
+                case VarEnum.VT_UNKNOWN:
+                    // TODO load the stdole library if it is not already.
+                    var stdOleLib = _typeLibraries.LoadLibrary(StdOleLibGuid);
+                    return stdOleLib.AllTypes.First(t => t.Name == "IUnknown");
 
                 case VarEnum.VT_CARRAY:
                     tdesc2 = Marshal.PtrToStructure<ComTypes.TYPEDESC>(tdesc.lpValue);
@@ -460,10 +466,11 @@ namespace Kavod.ComReflection
             }
         }
 
-        private VbaType FindExistingType(string typeName)
+        private VbaType FindExistingType(ComTypes.ITypeInfo info)
         {
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(typeName));
+            Contract.Requires<ArgumentNullException>(info != null);
 
+            var typeName = ComHelper.GetTypeName(info);
             var query = AllTypes
                 .Concat(_typeLibraries.LoadedLibraries.SelectMany(l => l.AllTypes))
                 .Where(t => t.MatchNameOrAlias(typeName));
@@ -475,14 +482,8 @@ namespace Kavod.ComReflection
         {
             Contract.Requires<ArgumentNullException>(info != null);
 
-            ComTypes.ITypeLib referencedTypeLib;
-            var index = -1;
-            info.GetContainingTypeLib(out referencedTypeLib, out index);
-            if (index == -1)
-            {
-                throw new Exception("it wasn't me");
-            }
-            _typeLibraries.LoadLibrary(referencedTypeLib);
+            var lib = ComHelper.GetContainingTypeLib(info);
+            _typeLibraries.LoadLibrary(lib);
         }
 
         public string Name { get; }
@@ -507,6 +508,8 @@ namespace Kavod.ComReflection
             HResult.Instance,
             SafeArray.Instance
         };
+
+        public Guid Guid { get; }
 
         public IEnumerable<Enum> Enums => _enums;
 

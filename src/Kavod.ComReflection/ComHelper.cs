@@ -39,6 +39,18 @@ namespace Kavod.ComReflection
             }
         }
 
+        internal static ComTypes.ITypeLib GetContainingTypeLib(ComTypes.ITypeInfo info)
+        {
+            ComTypes.ITypeLib referencedTypeLib;
+            var index = -1;
+            info.GetContainingTypeLib(out referencedTypeLib, out index);
+            if (index == -1)
+            {
+                throw new Exception("it wasn't me");
+            }
+            return referencedTypeLib;
+        }
+
         internal static string GetTypeLibName(ComTypes.ITypeLib refTypeInfo)
         {
             string refTypeName;

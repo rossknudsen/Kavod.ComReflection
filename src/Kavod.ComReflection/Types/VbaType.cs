@@ -85,6 +85,6 @@ namespace Kavod.ComReflection.Types
             return Name == nameOrAlias || _aliases.Contains(nameOrAlias);
         }
 
-        public override string ToString() => nameof(VbaType);
+        public override string ToString() => Name;
     }
 }
