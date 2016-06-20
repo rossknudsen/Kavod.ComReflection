@@ -108,7 +108,7 @@ namespace Kavod.ComReflection
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_ALIAS:
-                        aliases.Add(info);
+                        // lets ignore aliases for now.
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_UNION:
@@ -116,10 +116,6 @@ namespace Kavod.ComReflection
                     default:
                         throw new NotImplementedException();
                 }
-            }
-            foreach (var a in aliases)
-            {
-                AddAliasToType(a);  // possibly should create separate types.
             }
             foreach (var i in UserDefinedTypes)
             {
@@ -140,12 +136,6 @@ namespace Kavod.ComReflection
                 var info = _infoAndAttrs.First(i => i.Name == type.Name);
                 type.Hidden = info.TypeAttr.wTypeFlags.HasFlag(ComTypes.TYPEFLAGS.TYPEFLAG_FHIDDEN);
             }
-        }
-
-        private void AddAliasToType(TypeInfoAndTypeAttr info)
-        {
-            var type = GetType(info.TypeAttr.tdescAlias, info.TypeInfo);
-            type.AddAlias(info.Name);
         }
 
         private void AddInterfaceMembers()
@@ -494,7 +484,7 @@ namespace Kavod.ComReflection
             var query = PrimitiveTypes
                 .Concat(UserDefinedTypes)
                 .Concat(_typeLibraries.LoadedLibraries.SelectMany(l => l.UserDefinedTypes))
-                .Where(t => t.MatchNameOrAlias(typeName));
+                .Where(t => t.Name == typeName);
 
             return query.FirstOrDefault();
         }
