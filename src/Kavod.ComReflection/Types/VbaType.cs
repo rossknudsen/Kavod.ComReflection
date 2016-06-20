@@ -12,6 +12,7 @@ namespace Kavod.ComReflection.Types
         protected readonly List<VbaType> _implementedTypes = new List<VbaType>();
         protected readonly List<EnumMember> _enumMembers = new List<EnumMember>();
         protected readonly List<TypeMember> _members = new List<TypeMember>();
+        protected HashSet<string> _aliases = new HashSet<string>();
 
         protected VbaType(string name)
         {
@@ -27,6 +28,8 @@ namespace Kavod.ComReflection.Types
         public IEnumerable<EnumMember> EnumMembers => _enumMembers;
 
         public IEnumerable<TypeMember> TypeMembers => _members;
+
+        public IEnumerable<string> Aliases => _aliases;
 
         public virtual bool IsPrimitive { get; protected set; }
 
@@ -70,6 +73,18 @@ namespace Kavod.ComReflection.Types
         public void AddTypeMember(TypeMember member)
         {
             _members.Add(member);
+        }
+
+        public void AddAlias(string alias)
+        {
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(alias));
+
+            _aliases.Add(alias);
+        }
+
+        public bool MatchNameOrAlias(string nameOrAlias)
+        {
+            return Name == nameOrAlias || _aliases.Contains(nameOrAlias);
         }
 
         public override string ToString() => Name;
