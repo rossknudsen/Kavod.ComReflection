@@ -23,16 +23,28 @@ namespace Kavod.ComReflection
     {
         private const string StdOleLibGuidString = "{00020430-0000-0000-C000-000000000046}";
         private static readonly Guid StdOleLibGuid = new Guid(StdOleLibGuidString);
+        private static readonly VbaType[] _primitives = {
+            Boolean.Instance,
+            String.Instance,
+            Long.Instance,
+            Integer.Instance,
+            UnsupportedVariant.Instance,
+            Variant.Instance,
+            Byte.Instance,
+            Single.Instance,
+            Double.Instance,
+            Object.Instance,
+            Currency.Instance,
+            Date.Instance,
+            Any.Instance,
+            HResult.Instance,
+            SafeArray.Instance
+        };
 
         private readonly ComTypes.ITypeLib _typeLib;
         private readonly TypeLibraries _typeLibraries;
         private List<TypeInfoAndTypeAttr> _infoAndAttrs;
-        private List<Enum> _enums = new List<Enum>();
-        private List<Type> _types = new List<Type>();
-        private List<Module> _modules = new List<Module>();
-        private List<Interface> _interfaces = new List<Interface>();
-        private List<Dispatch> _dispatches = new List<Dispatch>();
-        private List<CoClass> _coclasses = new List<CoClass>();
+        private List<VbaType> _userDefinedTypes = new List<VbaType>();
 
         internal TypeLibrary(string filePath, TypeLibraries typeLibraries) 
             : this(filePath, ComHelper.LoadTypeLibrary(filePath), typeLibraries)
@@ -64,13 +76,7 @@ namespace Kavod.ComReflection
         {
             _infoAndAttrs = (from info in ComHelper.GetTypeInformation(_typeLib)
                              select new TypeInfoAndTypeAttr(info)).ToList();
-
-            var enums = new List<TypeInfoAndTypeAttr>();
-            var records = new List<TypeInfoAndTypeAttr>();
-            var modules = new List<TypeInfoAndTypeAttr>();
-            var interfaces = new List<TypeInfoAndTypeAttr>();
-            var dispatchInterfaces = new List<TypeInfoAndTypeAttr>();
-            var coclasses = new List<TypeInfoAndTypeAttr>();
+            
             var aliases = new List<TypeInfoAndTypeAttr>();
             // build the basic list of types.
             foreach (var info in _infoAndAttrs)
@@ -78,27 +84,27 @@ namespace Kavod.ComReflection
                 switch (info.TypeAttr.typekind)
                 {
                     case ComTypes.TYPEKIND.TKIND_ENUM:
-                        enums.Add(info);
+                        _userDefinedTypes.Add(new Enum(info.Name));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_RECORD:
-                        records.Add(info);
+                        _userDefinedTypes.Add(new Type(info.Name));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_MODULE:
-                        modules.Add(info);
+                        _userDefinedTypes.Add(new Module(info.Name));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_INTERFACE:   // VTABLE only, not dual.
-                        interfaces.Add(info);
+                        _userDefinedTypes.Add(new Interface(info.Name));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_DISPATCH:    // true dispatch type or dual type.
-                        dispatchInterfaces.Add(info);
+                        _userDefinedTypes.Add(new Dispatch(info.Name));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_COCLASS:
-                        coclasses.Add(info);
+                        _userDefinedTypes.Add(new CoClass(info.Name));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_ALIAS:
@@ -111,25 +117,19 @@ namespace Kavod.ComReflection
                         throw new NotImplementedException();
                 }
             }
-            _enums.AddRange(enums.Select(e => new Enum(e.Name)));
-            _types.AddRange(records.Select(r => new Type(r.Name)));
-            _modules.AddRange(modules.Select(m => new Module(m.Name)));
-            _interfaces.AddRange(interfaces.Select(i => new Interface(i.Name)));
-            _dispatches.AddRange(dispatchInterfaces.Select(d => new Dispatch(d.Name)));
-            _coclasses.AddRange(coclasses.Select(c => new CoClass(c.Name)));
             foreach (var a in aliases)
             {
                 AddAliasToType(a);  // possibly should create separate types.
             }
-            foreach (var i in _interfaces)
+            foreach (var i in UserDefinedTypes)
             {
                 AddImplementedInterfaces(i);
             }
-            foreach (var d in _dispatches)
+            foreach (var d in DispatchInterfaces)
             {
                 AddImplementedInterfaces(d);
             }
-            foreach (var c in _coclasses)
+            foreach (var c in CoClasses)
             {
                 AddImplementedInterfaces(c);
             }
@@ -143,7 +143,7 @@ namespace Kavod.ComReflection
 
         private void AddAccessModifiers()
         {
-            foreach (var type in AllTypes.Except(PrimitiveTypes))
+            foreach (var type in UserDefinedTypes)
             {
                 var info = _infoAndAttrs.First(i => i.Name == type.Name);
                 type.Hidden = info.TypeAttr.wTypeFlags.HasFlag(ComTypes.TYPEFLAGS.TYPEFLAG_FHIDDEN);
@@ -158,7 +158,7 @@ namespace Kavod.ComReflection
 
         private void AddInterfaceMembers()
         {
-            foreach (var @interface in _interfaces)
+            foreach (var @interface in Interfaces)
             {
                 var info = _infoAndAttrs.First(i => i.Name == @interface.Name);
                 foreach (var method in BuildModuleMethods(info))
@@ -170,7 +170,7 @@ namespace Kavod.ComReflection
 
         private void AddTypeMembers()
         {
-            foreach (var type in _types)
+            foreach (var type in Types)
             {
                 var info = _infoAndAttrs.First(i => i.Name == type.Name);
                 foreach (var member in BuildTypeMembers(info))
@@ -182,7 +182,7 @@ namespace Kavod.ComReflection
 
         private void AddEnumMembers()
         {
-            foreach (var e in _enums)
+            foreach (var e in Enums)
             {
                 var info = _infoAndAttrs.First(i => i.Name == e.Name);
                 foreach (var member in BuildEnumMembers(info))
@@ -194,7 +194,7 @@ namespace Kavod.ComReflection
 
         private void AddModuleMembers()
         {
-            foreach (var module in _modules)
+            foreach (var module in Modules)
             {
                 var info = _infoAndAttrs.First(i => i.Name == module.Name);
                 foreach (var method in BuildModuleMethods(info))
@@ -406,9 +406,8 @@ namespace Kavod.ComReflection
                     return loadedType;
 
                 case VarEnum.VT_UNKNOWN:
-                    // TODO load the stdole library if it is not already.
                     var stdOleLib = _typeLibraries.LoadLibrary(StdOleLibGuid);
-                    return stdOleLib.AllTypes.First(t => t.Name == "IUnknown");
+                    return stdOleLib.UserDefinedTypes.First(t => t.Name == "IUnknown");
 
                 case VarEnum.VT_CARRAY:
                     tdesc2 = Marshal.PtrToStructure<ComTypes.TYPEDESC>(tdesc.lpValue);
@@ -500,8 +499,9 @@ namespace Kavod.ComReflection
             Contract.Requires<ArgumentNullException>(info != null);
 
             var typeName = ComHelper.GetTypeName(info);
-            var query = AllTypes
-                .Concat(_typeLibraries.LoadedLibraries.SelectMany(l => l.AllTypes))
+            var query = PrimitiveTypes
+                .Concat(UserDefinedTypes)
+                .Concat(_typeLibraries.LoadedLibraries.SelectMany(l => l.UserDefinedTypes))
                 .Where(t => t.MatchNameOrAlias(typeName));
 
             return query.FirstOrDefault();
@@ -519,25 +519,6 @@ namespace Kavod.ComReflection
 
         public string FilePath { get; }
 
-        public IEnumerable<VbaType> PrimitiveTypes => new VbaType[]
-        {
-            Boolean.Instance,
-            String.Instance,
-            Long.Instance,
-            Integer.Instance,
-            UnsupportedVariant.Instance,
-            Variant.Instance,
-            Byte.Instance,
-            Single.Instance,
-            Double.Instance,
-            Object.Instance,
-            Currency.Instance,
-            Date.Instance,
-            Any.Instance,
-            HResult.Instance,
-            SafeArray.Instance
-        };
-
         public Guid Guid { get; }
 
         public bool Hidden { get; }
@@ -548,24 +529,20 @@ namespace Kavod.ComReflection
 
         public int Lcid { get; }
 
-        public IEnumerable<Enum> Enums => _enums;
+        public IEnumerable<Enum> Enums => _userDefinedTypes.OfType<Enum>();
 
-        public IEnumerable<Type> Types => _types;
+        public IEnumerable<Type> Types => _userDefinedTypes.OfType<Type>();
 
-        public IEnumerable<Module> Modules => _modules;
+        public IEnumerable<Module> Modules => _userDefinedTypes.OfType<Module>();
 
-        public IEnumerable<Interface> Interfaces => _interfaces;
+        public IEnumerable<Interface> Interfaces => _userDefinedTypes.OfType<Interface>();
 
-        public IEnumerable<Dispatch> DispatchInterfaces => _dispatches;
+        public IEnumerable<Dispatch> DispatchInterfaces => _userDefinedTypes.OfType<Dispatch>();
 
-        public IEnumerable<CoClass> CoClasses => _coclasses;
+        public IEnumerable<CoClass> CoClasses => _userDefinedTypes.OfType<CoClass>();
 
-        public IEnumerable<VbaType> AllTypes => PrimitiveTypes
-            .Concat(_enums)
-            .Concat(_types)
-            .Concat(_modules)
-            .Concat(_interfaces)
-            .Concat(_dispatches)
-            .Concat(_coclasses);
+        public IEnumerable<VbaType> PrimitiveTypes => _primitives;
+
+        public IEnumerable<VbaType> UserDefinedTypes => _userDefinedTypes;
     }
 }

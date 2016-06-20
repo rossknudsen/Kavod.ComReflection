@@ -17,7 +17,7 @@ namespace ComBrowser.ViewModel
                 AccessUriSource = @"\Resources\lock.png";
             }
 
-            foreach (var t in library.AllTypes)
+            foreach (var t in library.UserDefinedTypes)
             {
                 ChildNodes.Add(new LibraryOrTypeNodeViewModel(t));
                 TypesOrMembers.Add(new MemberViewModel(t));
