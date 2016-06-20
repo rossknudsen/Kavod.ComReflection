@@ -170,6 +170,7 @@
     <Resource Include="Resources\interface.png" />
     <Resource Include="Resources\udt.png" />
     <Resource Include="Resources\library.png" />
+    <Resource Include="Resources\lock.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -33,6 +33,8 @@ namespace Kavod.ComReflection.Types
 
         public virtual bool IsPrimitive { get; protected set; }
 
+        public bool Hidden { get; internal set; }
+
         internal void AddImplementedType(VbaType implType)
         {
             _implementedTypes.Add(implType);

@@ -49,9 +49,13 @@ namespace Kavod.ComReflection
             _typeLib = typeLib;
             _typeLibraries = typeLibraries;
 
-            var typeAttr = ComHelper.GetTypeLibAttr(typeLib);
-            Guid = typeAttr.guid;
-            // TODO there is additional information in the TypeLibAttr class of interest.
+            var libAttr = ComHelper.GetTypeLibAttr(typeLib);
+            Guid = libAttr.guid;
+            Hidden = libAttr.wLibFlags.HasFlag(ComTypes.LIBFLAGS.LIBFLAG_FHIDDEN)
+                     || libAttr.wLibFlags.HasFlag(ComTypes.LIBFLAGS.LIBFLAG_FRESTRICTED);
+            Lcid = libAttr.lcid;
+            MajorVersion = libAttr.wMajorVerNum;
+            MinorVersion = libAttr.wMinorVerNum;
 
             CreateTypeInformation();
         }
@@ -134,6 +138,16 @@ namespace Kavod.ComReflection
             AddInterfaceMembers();
             AddTypeMembers();
             AddModuleMembers();
+            AddAccessModifiers();
+        }
+
+        private void AddAccessModifiers()
+        {
+            foreach (var type in AllTypes.Except(PrimitiveTypes))
+            {
+                var info = _infoAndAttrs.First(i => i.Name == type.Name);
+                type.Hidden = info.TypeAttr.wTypeFlags.HasFlag(ComTypes.TYPEFLAGS.TYPEFLAG_FHIDDEN);
+            }
         }
 
         private void AddAliasToType(TypeInfoAndTypeAttr info)
@@ -510,6 +524,14 @@ namespace Kavod.ComReflection
         };
 
         public Guid Guid { get; }
+
+        public bool Hidden { get; }
+
+        public short MinorVersion { get; }
+
+        public short MajorVersion { get; }
+
+        public int Lcid { get; }
 
         public IEnumerable<Enum> Enums => _enums;
 

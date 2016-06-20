@@ -12,6 +12,10 @@ namespace ComBrowser.ViewModel
             TypeLibrary = library;
             Name = library.Name;
             IconUriSource = @"\Resources\library.png";
+            if (library.Hidden)
+            {
+                AccessUriSource = @"\Resources\lock.png";
+            }
 
             foreach (var t in library.AllTypes)
             {
@@ -34,6 +38,10 @@ namespace ComBrowser.ViewModel
             foreach (var m in type.EnumMembers)
             {
                 TypesOrMembers.Add(new MemberViewModel(m));
+            }
+            if (type.Hidden)
+            {
+                AccessUriSource = @"\Resources\lock.png";
             }
             SetIconUriSource(type);
         }
@@ -75,5 +83,7 @@ namespace ComBrowser.ViewModel
         public TypeLibrary TypeLibrary { get; }
 
         public string IconUriSource { get; private set; }
+
+        public string AccessUriSource { get; private set; }
     }
 }
