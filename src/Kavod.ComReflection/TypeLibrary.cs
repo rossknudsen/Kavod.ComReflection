@@ -338,30 +338,45 @@ namespace Kavod.ComReflection
             }
 
             var name = ComHelper.GetMemberName(typeInfo, funcDesc);
+            var hidden = ((ComTypes.FUNCFLAGS)funcDesc.wFuncFlags).HasFlag(ComTypes.FUNCFLAGS.FUNCFLAG_FHIDDEN);
+            // TODO there are some other FUNCFLAGS that may be of interest.
             if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYGET))
             {
                 var returnType = GetType(funcDesc.elemdescFunc.tdesc, typeInfo);
-                var method = new Property(name, parameters, returnType, true, false);
+                var method = new Property(name, parameters, returnType, true, false)
+                {
+                    Hidden = hidden
+                };
                 return method;
             }
             if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_FUNC)
                 && (VarEnum)funcDesc.elemdescFunc.tdesc.vt != VarEnum.VT_VOID)
             {
                 var returnType = GetType(funcDesc.elemdescFunc.tdesc, typeInfo);
-                var method = new Function(name, parameters, returnType);
+                var method = new Function(name, parameters, returnType)
+                {
+                    Hidden = hidden
+                };
                 return method;
             }
             if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYPUT)
                 || funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYPUTREF))
             {
                 var returnType = GetType(funcDesc.elemdescFunc.tdesc, typeInfo);
-                var method = new Property(name, parameters, returnType, true, false);
+                var method = new Property(name, parameters, returnType, true, false)
+                {
+                    Hidden = hidden
+                };
                 return method;
             }
             if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_FUNC)
                 && (VarEnum)funcDesc.elemdescFunc.tdesc.vt == VarEnum.VT_VOID)
             {
-                return new Sub(name, parameters);
+                var method = new Sub(name, parameters)
+                {
+                    Hidden = hidden
+                };
+                return method;
             }
             throw new Exception();
         }

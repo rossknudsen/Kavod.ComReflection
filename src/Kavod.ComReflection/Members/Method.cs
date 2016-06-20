@@ -20,6 +20,8 @@ namespace Kavod.ComReflection.Members
 
         public IEnumerable<Parameter> Parameters { get; }
 
+        public bool Hidden { get; internal set; }
+
         public abstract string ToSignatureString();
 
         protected string ConvertParametersForSignature()
