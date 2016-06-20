@@ -24,12 +24,12 @@ namespace Kavod.ComReflection
         private readonly ComTypes.ITypeLib _typeLib;
         private readonly TypeLibraries _typeLibraries;
         private List<TypeInfoAndTypeAttr> _infoAndAttrs;
-        private List<UserDefinedType> _udts = new List<UserDefinedType>();
         private List<Enum> _enums = new List<Enum>();
         private List<Type> _types = new List<Type>();
         private List<Module> _modules = new List<Module>();
         private List<Interface> _interfaces = new List<Interface>();
         private List<Dispatch> _dispatches = new List<Dispatch>();
+        private List<CoClass> _coclasses = new List<CoClass>();
 
         internal TypeLibrary(string filePath, TypeLibraries typeLibraries) 
             : this(filePath, ComHelper.LoadTypeLibrary(filePath), typeLibraries)
@@ -50,7 +50,6 @@ namespace Kavod.ComReflection
             // TODO there is additional information in the TypeLibAttr class of interest.
 
             CreateTypeInformation();
-            BuildUserDefinedTypeMembers();
         }
 
         private void CreateTypeInformation()
@@ -108,13 +107,23 @@ namespace Kavod.ComReflection
             _types.AddRange(records.Select(r => new Type(r.Name)));
             _modules.AddRange(modules.Select(m => new Module(m.Name)));
             _interfaces.AddRange(interfaces.Select(i => new Interface(i.Name)));
-            _udts.AddRange(dispatchInterfaces.Select(d => new UserDefinedType(d.Name)));
-            //_dispatches.AddRange(dispatchInterfaces.Select(d => new Dispatch(d.Name)));
-            _udts.AddRange(coclasses.Select(c => new UserDefinedType(c.Name)));
+            _dispatches.AddRange(dispatchInterfaces.Select(d => new Dispatch(d.Name)));
+            _coclasses.AddRange(coclasses.Select(c => new CoClass(c.Name)));
             foreach (var a in aliases)
             {
-                AddAliasToType(a);
-                //_udts.Add(new UserDefinedType(info.Name));  Not sure if I should have explicit Aliases or not.
+                AddAliasToType(a);  // possibly should create separate types.
+            }
+            foreach (var i in _interfaces)
+            {
+                AddImplementedInterfaces(i);
+            }
+            foreach (var d in _dispatches)
+            {
+                AddImplementedInterfaces(d);
+            }
+            foreach (var c in _coclasses)
+            {
+                AddImplementedInterfaces(c);
             }
 
             AddEnumMembers();
@@ -148,7 +157,7 @@ namespace Kavod.ComReflection
                 var info = _infoAndAttrs.First(i => i.Name == type.Name);
                 foreach (var member in BuildTypeMembers(info))
                 {
-                    type.AddMember(member);
+                    type.AddTypeMember(member);
                 }
             }
         }
@@ -160,7 +169,7 @@ namespace Kavod.ComReflection
                 var info = _infoAndAttrs.First(i => i.Name == e.Name);
                 foreach (var member in BuildEnumMembers(info))
                 {
-                    e.AddMember(member);
+                    e.AddEnumMember(member);
                 }
             }
         }
@@ -237,47 +246,20 @@ namespace Kavod.ComReflection
             }
         }
 
-        private void BuildUserDefinedTypeMembers()
+        private void AddImplementedInterfaces(VbaType type)
         {
-            // add the implemented type references to each type.
-            foreach (var currentUdt in _udts)
+            // add the implemented interfaces.
+            var info = _infoAndAttrs.First(i => i.Name == type.Name);
+            foreach (var inherited in ComHelper.GetInheritedTypeInfos(info))
             {
-                var info = _infoAndAttrs.First(i => i.Name == currentUdt.Name);
-
-                // build the fields and constants for each type.
-                foreach (var varDesc in ComHelper.GetTypeVariables(info))
+                var implementedName = ComHelper.GetTypeName(inherited);
+                var implemented = FindExistingType(implementedName);
+                if (implemented == null)
                 {
-                    var name = ComHelper.GetMemberName(info.TypeInfo, varDesc);
-                    var type = GetType(varDesc.elemdescVar.tdesc, info.TypeInfo);
-                    if (ComHelper.IsConstant(varDesc))
-                    {
-                        var constantValue = ComHelper.GetConstantValue(varDesc);
-                        currentUdt.AddField(new Constant(name, type, constantValue));
-                    }
-                    else
-                    {
-                        currentUdt.AddField(new Field(name, type, false));
-                    }
+                    LoadTypeLibrary(inherited);
+                    implemented = FindExistingType(implementedName);
                 }
-
-                // build the methods for each type.
-                var methods = (from funcDesc in ComHelper.GetFuncDescs(info)
-                    select BuildMethod(funcDesc, info.TypeInfo)).ToList();
-
-                ConsolidateProperties(methods);
-                currentUdt.AddMethods(methods);
-
-                // add the implemented interfaces.
-                foreach (var inherited in ComHelper.GetInheritedTypeInfos(info))
-                {
-                    string implementedName = ComHelper.GetTypeName(inherited);
-                    Object implemented = FindExistingType(implementedName);
-                    if (implemented == null)
-                    {
-                        throw new NotImplementedException();
-                    }
-                    currentUdt.AddImplementedType(implemented);
-                }
+                type.AddImplementedType(implemented);
             }
         }
 
@@ -367,7 +349,7 @@ namespace Kavod.ComReflection
             throw new Exception();
         }
 
-        private Object GetType(ComTypes.TYPEDESC tdesc, ComTypes.ITypeInfo context)
+        private VbaType GetType(ComTypes.TYPEDESC tdesc, ComTypes.ITypeInfo context)
         {
             var vt = (VarEnum)tdesc.vt;
             ComTypes.TYPEDESC tdesc2;
@@ -378,6 +360,7 @@ namespace Kavod.ComReflection
                     return GetType(tdesc2, context);
 
                 case VarEnum.VT_USERDEFINED:
+                case VarEnum.VT_UNKNOWN:
                     if (context == null)
                     {
                         throw new InvalidOperationException($"{nameof(context)} is null.  This is required for {VarEnum.VT_USERDEFINED}");
@@ -440,7 +423,7 @@ namespace Kavod.ComReflection
                 case VarEnum.VT_STREAMED_OBJECT:
                 case VarEnum.VT_STORED_OBJECT:
                 case VarEnum.VT_BLOB_OBJECT:
-                    return Object.GetInstance();
+                    return Object.Instance;
 
                 case VarEnum.VT_CY:
                     return Currency.Instance;
@@ -456,9 +439,6 @@ namespace Kavod.ComReflection
 
                 case VarEnum.VT_SAFEARRAY:
                     return SafeArray.Instance;  // TODO should get more info for this type
-
-                case VarEnum.VT_UNKNOWN:
-                    return Unknown.Instance;
 
                 case VarEnum.VT_DECIMAL:
                 // Currency?
@@ -480,7 +460,7 @@ namespace Kavod.ComReflection
             }
         }
 
-        private Object FindExistingType(string typeName)
+        private VbaType FindExistingType(string typeName)
         {
             Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(typeName));
 
@@ -509,7 +489,7 @@ namespace Kavod.ComReflection
 
         public string FilePath { get; }
 
-        public IEnumerable<Object> PrimitiveTypes => new Object[]
+        public IEnumerable<VbaType> PrimitiveTypes => new VbaType[]
         {
             Boolean.Instance,
             String.Instance,
@@ -520,16 +500,13 @@ namespace Kavod.ComReflection
             Byte.Instance,
             Single.Instance,
             Double.Instance,
-            Object.GetInstance(),
+            Object.Instance,
             Currency.Instance,
             Date.Instance,
             Any.Instance,
             HResult.Instance,
-            SafeArray.Instance,
-            Unknown.Instance
+            SafeArray.Instance
         };
-
-        public IEnumerable<UserDefinedType> VbaTypes => _udts;
 
         public IEnumerable<Enum> Enums => _enums;
 
@@ -541,12 +518,14 @@ namespace Kavod.ComReflection
 
         public IEnumerable<Dispatch> DispatchInterfaces => _dispatches;
 
-        public IEnumerable<Object> AllTypes => PrimitiveTypes
-            .Concat(_udts)
+        public IEnumerable<CoClass> CoClasses => _coclasses;
+
+        public IEnumerable<VbaType> AllTypes => PrimitiveTypes
             .Concat(_enums)
             .Concat(_types)
             .Concat(_modules)
             .Concat(_interfaces)
-            .Concat(_dispatches);
+            .Concat(_dispatches)
+            .Concat(_coclasses);
     }
 }

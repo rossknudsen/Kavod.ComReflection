@@ -1,6 +1,6 @@
 namespace Kavod.ComReflection.Types
 {
-    public sealed class Long : Object
+    public sealed class Long : VbaType
     {
         public static Long Instance = new Long();
 

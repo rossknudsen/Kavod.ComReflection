@@ -1,6 +1,6 @@
 namespace Kavod.ComReflection.Types
 {
-    public sealed class Integer : Object
+    public sealed class Integer : VbaType
     {
         public static Integer Instance = new Integer();
 

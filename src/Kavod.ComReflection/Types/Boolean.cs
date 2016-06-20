@@ -1,6 +1,6 @@
 namespace Kavod.ComReflection.Types
 {
-    public sealed class Boolean : Object
+    public sealed class Boolean : VbaType
     {
         public static Boolean Instance = new Boolean();
 

@@ -84,9 +84,11 @@
     <Compile Include="Members\Field.cs" />
     <Compile Include="Members\Function.cs" />
     <Compile Include="Members\Method.cs" />
+    <Compile Include="Types\CoClass.cs" />
     <Compile Include="Types\Dispatch.cs" />
     <Compile Include="Types\Interface.cs" />
     <Compile Include="Types\Module.cs" />
+    <Compile Include="Types\Object.cs" />
     <Compile Include="Types\Type.cs" />
     <Compile Include="Types\Any.cs" />
     <Compile Include="Types\Array.cs" />
@@ -96,11 +98,12 @@
     <Compile Include="Types\Date.cs" />
     <Compile Include="Types\Double.cs" />
     <Compile Include="Types\Enum.cs" />
-    <Compile Include="Types\EnumMember.cs" />
+    <Compile Include="Members\EnumMember.cs" />
     <Compile Include="Types\HResult.cs" />
     <Compile Include="Types\Integer.cs" />
     <Compile Include="Types\Long.cs" />
-    <Compile Include="Types\Object.cs" />
+    <Compile Include="Members\TypeMember.cs" />
+    <Compile Include="Types\VbaType.cs" />
     <Compile Include="Members\Parameter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Members\Property.cs" />
@@ -112,10 +115,8 @@
     <Compile Include="Types\SafeArray.cs" />
     <Compile Include="Types\Single.cs" />
     <Compile Include="Types\String.cs" />
-    <Compile Include="Types\Unknown.cs" />
     <Compile Include="Types\UnsupportedVariant.cs" />
     <Compile Include="Types\Variant.cs" />
-    <Compile Include="Types\UserDefinedType.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,6 +1,6 @@
 namespace Kavod.ComReflection.Types
 {
-    public sealed class HResult : Object
+    public sealed class HResult : VbaType
     {
         public static readonly HResult Instance = new HResult();
 

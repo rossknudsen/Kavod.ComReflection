@@ -1,6 +1,6 @@
 namespace Kavod.ComReflection.Types
 {
-    public sealed class SafeArray : Object
+    public sealed class SafeArray : VbaType
     {
         public static readonly SafeArray Instance = new SafeArray();
 

@@ -1,10 +1,10 @@
-using Kavod.ComReflection.Members;
+using Kavod.ComReflection.Types;
 
-namespace Kavod.ComReflection.Types
+namespace Kavod.ComReflection.Members
 {
     public class EnumMember : Constant
     {
-        public EnumMember(string name, Object type, object value) : base(name, type, value)
+        public EnumMember(string name, VbaType type, object value) : base(name, type, value)
         { }
 
         public override string ToSignatureString()

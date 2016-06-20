@@ -4,7 +4,7 @@ namespace Kavod.ComReflection.Members
 {
     public class Constant : Field
     {
-        public Constant(string name, Object type, object value) : base(name, type, true)
+        public Constant(string name, VbaType type, object value) : base(name, type, true)
         {
             Value = value;
         }

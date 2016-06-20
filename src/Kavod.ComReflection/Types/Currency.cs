@@ -1,6 +1,6 @@
 namespace Kavod.ComReflection.Types
 {
-    public sealed class Currency : Object
+    public sealed class Currency : VbaType
     {
         public static Currency Instance = new Currency();
 

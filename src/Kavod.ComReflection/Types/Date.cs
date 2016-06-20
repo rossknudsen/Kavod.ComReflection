@@ -1,6 +1,6 @@
 namespace Kavod.ComReflection.Types
 {
-    public sealed class Date : Object
+    public sealed class Date : VbaType
     {
         public static Date Instance = new Date();
 

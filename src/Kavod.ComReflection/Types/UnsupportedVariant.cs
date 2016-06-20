@@ -1,6 +1,6 @@
 namespace Kavod.ComReflection.Types
 {
-    internal class UnsupportedVariant : Object
+    internal class UnsupportedVariant : VbaType
     {
         public static readonly UnsupportedVariant Instance = new UnsupportedVariant();
 

@@ -2,12 +2,12 @@ using System.Collections.Generic;
 
 namespace Kavod.ComReflection.Types
 {
-    public sealed class Array : Object
+    public sealed class Array : VbaType
     {
         // TODO it would be nice if this could be a generic class.
-        private static readonly IDictionary<Object, Array> Instances = new Dictionary<Object, Array>();
+        private static readonly IDictionary<VbaType, Array> Instances = new Dictionary<VbaType, Array>();
 
-        public static Array GetInstance(Object arrayType)
+        public static Array GetInstance(VbaType arrayType)
         {
             if (!Instances.ContainsKey(arrayType))
             {
@@ -16,12 +16,12 @@ namespace Kavod.ComReflection.Types
             return Instances[arrayType];
         }
 
-        private Array(Object arrayType) : base($"{nameof(Array)}(Of {arrayType.Name})")
+        private Array(VbaType arrayType) : base($"{nameof(Array)}(Of {arrayType.Name})")
         {
             ArrayType = arrayType;
         }
 
-        public Object ArrayType { get; }
+        public VbaType ArrayType { get; }
 
         public override string ToString() => nameof(Array);
     }

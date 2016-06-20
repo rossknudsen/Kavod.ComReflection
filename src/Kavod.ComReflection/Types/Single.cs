@@ -1,6 +1,6 @@
 namespace Kavod.ComReflection.Types
 {
-    public sealed class Single : Object
+    public sealed class Single : VbaType
     {
         public static Single Instance = new Single();
 

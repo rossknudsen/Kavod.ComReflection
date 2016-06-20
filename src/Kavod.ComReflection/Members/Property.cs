@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using Object = Kavod.ComReflection.Types.Object;
+using Kavod.ComReflection.Types;
 
 namespace Kavod.ComReflection.Members
 {
     public class Property : Method
     {
-        public Property(string name, IEnumerable<Parameter> parameters, Object returnType, bool canRead, bool canWrite) 
+        public Property(string name, IEnumerable<Parameter> parameters, VbaType returnType, bool canRead, bool canWrite) 
             : base(name, parameters)
         {
             Contract.Requires<ArgumentNullException>(returnType != null);
@@ -24,7 +24,7 @@ namespace Kavod.ComReflection.Members
 
         public bool CanWrite { get; internal set; }
 
-        public Object ReturnType { get; }
+        public VbaType ReturnType { get; }
 
         public override string ToSignatureString()
         {

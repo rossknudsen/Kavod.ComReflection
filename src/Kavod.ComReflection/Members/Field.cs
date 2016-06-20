@@ -4,14 +4,14 @@ namespace Kavod.ComReflection.Members
 {
     public class Field
     {
-        public Field(string name, Object type, bool isConstant)
+        public Field(string name, VbaType type, bool isConstant)
         {
             Name = name;
             Type = type;
             IsConstant = isConstant;
         }
 
-        public Object Type { get; }
+        public VbaType Type { get; }
 
         public string Name { get; }
 

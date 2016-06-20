@@ -1,6 +1,6 @@
 namespace Kavod.ComReflection.Types
 {
-    public sealed class Byte : Object
+    public sealed class Byte : VbaType
     {
         public static Byte Instance = new Byte();
 

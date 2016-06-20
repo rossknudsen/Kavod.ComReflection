@@ -13,100 +13,57 @@ namespace ComBrowser.ViewModel
             Name = library.Name;
             IconUriSource = @"\Resources\library.png";
 
-            foreach (var t in library.VbaTypes)
+            foreach (var t in library.AllTypes)
             {
                 ChildNodes.Add(new LibraryOrTypeNodeViewModel(t));
                 TypesOrMembers.Add(new MemberViewModel(t));
             }
-            foreach (var e in library.Enums)
-            {
-                ChildNodes.Add(new LibraryOrTypeNodeViewModel(e));
-                TypesOrMembers.Add(new MemberViewModel(e));
-            }
-            foreach (var t in library.Types)
-            {
-                ChildNodes.Add(new LibraryOrTypeNodeViewModel(t));
-                TypesOrMembers.Add(new MemberViewModel(t));
-            }
-            foreach (var m in library.Modules)
-            {
-                ChildNodes.Add(new LibraryOrTypeNodeViewModel(m));
-                TypesOrMembers.Add(new MemberViewModel(m));
-            }
-            foreach (var i in library.Interfaces)
-            {
-                ChildNodes.Add(new LibraryOrTypeNodeViewModel(i));
-                TypesOrMembers.Add(new MemberViewModel(i));
-            }
-            foreach (var i in library.DispatchInterfaces)
-            {
-                ChildNodes.Add(new LibraryOrTypeNodeViewModel(i));
-                TypesOrMembers.Add(new MemberViewModel(i));
-            }
         }
 
-        private LibraryOrTypeNodeViewModel(UserDefinedType userDefinedType)
-        {
-            Name = userDefinedType.Name;
-            IconUriSource = @"\Resources\udt.png";
-
-            foreach (var f in userDefinedType.Fields)
-            {
-                TypesOrMembers.Add(new MemberViewModel(f));
-            }
-            foreach (var m in userDefinedType.Methods)
-            {
-                TypesOrMembers.Add(new MemberViewModel(m));
-            }
-        }
-
-        private LibraryOrTypeNodeViewModel(Enum enumType)
-        {
-            Name = enumType.Name;
-            IconUriSource = @"\Resources\enum.png";
-            foreach (var m in enumType.Members)
-            {
-                TypesOrMembers.Add(new MemberViewModel(m));
-            }
-        }
-
-        private LibraryOrTypeNodeViewModel(Type type)
+        private LibraryOrTypeNodeViewModel(VbaType type)
         {
             Name = type.Name;
-            IconUriSource = @"\Resources\type.png";
-            foreach (var m in type.TypeMembers)
-            {
-                TypesOrMembers.Add(new MemberViewModel(m));
-            }
-        }
-
-        private LibraryOrTypeNodeViewModel(Module module)
-        {
-            Name = module.Name;
-            IconUriSource = @"\Resources\module.png";
-            foreach (var f in module.Fields)
+            foreach (var f in type.Fields)
             {
                 TypesOrMembers.Add(new MemberViewModel(f));
             }
-            foreach (var m in module.Methods)
+            foreach (var m in type.Methods)
             {
                 TypesOrMembers.Add(new MemberViewModel(m));
             }
-        }
-
-        private LibraryOrTypeNodeViewModel(Interface @interface)
-        {
-            Name = @interface.Name;
-            IconUriSource = @"\Resources\interface.png";
-            foreach (var m in @interface.Methods)
+            foreach (var m in type.EnumMembers)
             {
                 TypesOrMembers.Add(new MemberViewModel(m));
             }
+            SetIconUriSource(type);
         }
 
-        private LibraryOrTypeNodeViewModel(Dispatch dispatch)
+        private void SetIconUriSource(VbaType type)
         {
-            Name = dispatch.Name;
+            if (type is Enum)
+            {
+                IconUriSource = @"\Resources\enum.png";
+            }
+            else if (type is Type)
+            {
+                IconUriSource = @"\Resources\type.png";
+            }
+            else if (type is Module)
+            {
+                IconUriSource = @"\Resources\module.png";
+            }
+            else if (type is Interface)
+            {
+                IconUriSource = @"\Resources\interface.png";
+            }
+            else if (type is Dispatch)
+            {
+                IconUriSource = @"\Resources\udt.png";
+            }
+            else if (type is CoClass)
+            {
+                IconUriSource = @"\Resources\udt.png";
+            }
         }
 
         public string Name { get; private set; }

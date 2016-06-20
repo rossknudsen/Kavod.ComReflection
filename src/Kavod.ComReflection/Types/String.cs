@@ -1,6 +1,6 @@
 namespace Kavod.ComReflection.Types
 {
-    public sealed class String : Object
+    public sealed class String : VbaType
     {
         public static String Instance = new String();
 
