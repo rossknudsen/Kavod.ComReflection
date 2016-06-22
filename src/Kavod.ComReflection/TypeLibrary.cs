@@ -12,6 +12,7 @@ using Double = Kavod.ComReflection.Types.Double;
 using Object = Kavod.ComReflection.Types.Object;
 using Single = Kavod.ComReflection.Types.Single;
 using String = Kavod.ComReflection.Types.String;
+using Void = Kavod.ComReflection.Types.Void;
 
 namespace Kavod.ComReflection
 {
@@ -34,7 +35,8 @@ namespace Kavod.ComReflection
             Date.Instance,
             Any.Instance,
             HResult.Instance,
-            SafeArray.Instance
+            SafeArray.Instance,
+            Void.Instance
         };
 
         private readonly ComTypes.ITypeLib _typeLib;

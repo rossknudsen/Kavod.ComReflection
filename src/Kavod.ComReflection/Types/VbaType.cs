@@ -113,11 +113,11 @@ namespace Kavod.ComReflection.Types
             }
 
             var name = ComHelper.GetMemberName(_info.TypeInfo, funcDesc);
+            var returnType = repo.GetVbaType(funcDesc.elemdescFunc.tdesc, _info.TypeInfo);
             var hidden = ((ComTypes.FUNCFLAGS)funcDesc.wFuncFlags).HasFlag(ComTypes.FUNCFLAGS.FUNCFLAG_FHIDDEN);
             // TODO there are some other FUNCFLAGS that may be of interest.
             if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYGET))
             {
-                var returnType = repo.GetVbaType(funcDesc.elemdescFunc.tdesc, _info.TypeInfo);
                 var method = new Property(name, parameters, returnType, true, false)
                 {
                     Hidden = hidden
@@ -127,7 +127,6 @@ namespace Kavod.ComReflection.Types
             if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_FUNC)
                 && (VarEnum)funcDesc.elemdescFunc.tdesc.vt != VarEnum.VT_VOID)
             {
-                var returnType = repo.GetVbaType(funcDesc.elemdescFunc.tdesc, _info.TypeInfo);
                 var method = new Function(name, parameters, returnType)
                 {
                     Hidden = hidden
@@ -137,7 +136,6 @@ namespace Kavod.ComReflection.Types
             if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYPUT)
                 || funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYPUTREF))
             {
-                var returnType = repo.GetVbaType(funcDesc.elemdescFunc.tdesc, _info.TypeInfo);
                 var method = new Property(name, parameters, returnType, true, false)
                 {
                     Hidden = hidden
