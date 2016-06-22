@@ -284,10 +284,6 @@ namespace Kavod.ComReflection
 
         public int Lcid { get; }
 
-        public IEnumerable<Enum> Enums => _userDefinedTypes.OfType<Enum>();
-
-        public IEnumerable<Type> Types => _userDefinedTypes.OfType<Type>();
-
         public IEnumerable<VbaType> PrimitiveTypes => _primitives;
 
         public IEnumerable<VbaType> UserDefinedTypes => _userDefinedTypes;
