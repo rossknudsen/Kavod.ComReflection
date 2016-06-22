@@ -2,7 +2,7 @@
 {
     public class Module : VbaType
     {
-        internal Module(string name) : base(name) { }
+        internal Module(TypeInfoAndTypeAttr info) : base(info) { }
 
         public override string ToString() => Name;
     }

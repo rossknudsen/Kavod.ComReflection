@@ -2,7 +2,7 @@
 {
     public class Enum : VbaType
     {
-        public Enum(string name) : base(name) { }
+        public Enum(TypeInfoAndTypeAttr info) : base(info) { }
 
         public override string ToString() => Name;
     }

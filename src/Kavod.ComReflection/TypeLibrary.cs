@@ -44,7 +44,7 @@ namespace Kavod.ComReflection
         private readonly ComTypes.ITypeLib _typeLib;
         private readonly TypeLibraries _typeLibraries;
         private List<TypeInfoAndTypeAttr> _infoAndAttrs;
-        private List<VbaType> _userDefinedTypes = new List<VbaType>();
+        private readonly List<VbaType> _userDefinedTypes = new List<VbaType>();
 
         internal TypeLibrary(string filePath, TypeLibraries typeLibraries) 
             : this(filePath, ComHelper.LoadTypeLibrary(filePath), typeLibraries)
@@ -85,27 +85,27 @@ namespace Kavod.ComReflection
                 switch (info.TypeAttr.typekind)
                 {
                     case ComTypes.TYPEKIND.TKIND_ENUM:
-                        _userDefinedTypes.Add(new Enum(info.Name));
+                        _userDefinedTypes.Add(new Enum(info));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_RECORD:
-                        _userDefinedTypes.Add(new Type(info.Name));
+                        _userDefinedTypes.Add(new Type(info));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_MODULE:
-                        _userDefinedTypes.Add(new Module(info.Name));
+                        _userDefinedTypes.Add(new Module(info));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_INTERFACE:   // VTABLE only, not dual.
-                        _userDefinedTypes.Add(new Interface(info.Name));
+                        _userDefinedTypes.Add(new Interface(info));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_DISPATCH:    // true dispatch type or dual type.
-                        _userDefinedTypes.Add(new Dispatch(info.Name));
+                        _userDefinedTypes.Add(new Dispatch(info));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_COCLASS:
-                        _userDefinedTypes.Add(new CoClass(info.Name));
+                        _userDefinedTypes.Add(new CoClass(info));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_ALIAS:
@@ -130,7 +130,6 @@ namespace Kavod.ComReflection
             {
                 AddImplementedInterfaces(type);
                 var info = _infoAndAttrs.First(a => a.Name == type.Name);
-                type.Hidden = info.TypeAttr.wTypeFlags.HasFlag(ComTypes.TYPEFLAGS.TYPEFLAG_FHIDDEN);
 
                 foreach (var method1 in BuildModuleMethods(info))
                 {

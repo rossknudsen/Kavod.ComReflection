@@ -2,6 +2,6 @@
 {
     public class Interface : VbaType
     {
-        public Interface(string name) : base(name) { }
+        public Interface(TypeInfoAndTypeAttr info) : base(info) { }
     }
 }

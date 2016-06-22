@@ -2,7 +2,7 @@ using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace Kavod.ComReflection
 {
-    internal class TypeInfoAndTypeAttr
+    public class TypeInfoAndTypeAttr
     {
         internal TypeInfoAndTypeAttr(ComTypes.ITypeInfo typeInfo)
         {

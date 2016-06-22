@@ -2,6 +2,6 @@
 {
     public class CoClass : VbaType
     {
-        public CoClass(string name) : base(name) { }
+        public CoClass(TypeInfoAndTypeAttr info) : base(info) { }
     }
 }

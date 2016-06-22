@@ -1,18 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Runtime.InteropServices.ComTypes;
 using Kavod.ComReflection.Members;
 
 namespace Kavod.ComReflection.Types
 {
     public class VbaType
     {
+        protected readonly TypeInfoAndTypeAttr _info;
         protected readonly List<Field> _fields = new List<Field>();
         protected readonly List<Method> _methods = new List<Method>();
         protected readonly List<VbaType> _implementedTypes = new List<VbaType>();
         protected readonly List<EnumMember> _enumMembers = new List<EnumMember>();
         protected readonly List<TypeMember> _members = new List<TypeMember>();
         protected HashSet<string> _aliases = new HashSet<string>();
+
+        protected VbaType(TypeInfoAndTypeAttr info) : this(info.Name)
+        {
+            _info = info;
+            Hidden = _info.TypeAttr.wTypeFlags.HasFlag(TYPEFLAGS.TYPEFLAG_FHIDDEN);
+        }
 
         protected VbaType(string name)
         {

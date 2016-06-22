@@ -2,6 +2,6 @@
 {
     public class Dispatch : VbaType
     {
-        public Dispatch(string name) : base(name) { }
+        public Dispatch(TypeInfoAndTypeAttr info) : base(info) { }
     }
 }
