@@ -18,10 +18,42 @@ namespace Kavod.ComReflection.Types
         protected readonly List<TypeMember> _members = new List<TypeMember>();
         protected HashSet<string> _aliases = new HashSet<string>();
 
-        protected VbaType(TypeInfoAndTypeAttr info) : this(info.Name)
+        public VbaType(TypeInfoAndTypeAttr info) : this(info.Name)
         {
             _info = info;
             Hidden = _info.TypeAttr.wTypeFlags.HasFlag(ComTypes.TYPEFLAGS.TYPEFLAG_FHIDDEN);
+            switch (_info.TypeAttr.typekind)
+            {
+                case ComTypes.TYPEKIND.TKIND_ENUM:
+                    IsEnum = true;
+                    break;
+
+                case ComTypes.TYPEKIND.TKIND_RECORD:
+                    IsType = true;
+                    break;
+
+                case ComTypes.TYPEKIND.TKIND_MODULE:
+                    IsModule = true;
+                    break;
+
+                case ComTypes.TYPEKIND.TKIND_INTERFACE:   // VTABLE only, not dual.
+                    IsInterface = true;
+                    break;
+
+                case ComTypes.TYPEKIND.TKIND_DISPATCH:    // true dispatch type or dual type.
+                    IsDispatch = true;
+                    break;
+
+                case ComTypes.TYPEKIND.TKIND_COCLASS:
+                    IsCoClass = true;
+                    break;
+
+                case ComTypes.TYPEKIND.TKIND_ALIAS:
+                case ComTypes.TYPEKIND.TKIND_UNION:
+                case ComTypes.TYPEKIND.TKIND_MAX:
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         protected VbaType(string name)
@@ -169,6 +201,18 @@ namespace Kavod.ComReflection.Types
         public IEnumerable<TypeMember> TypeMembers => _members;
 
         public IEnumerable<string> Aliases => _aliases;
+
+        public bool IsEnum { get; }
+
+        public bool IsType { get; }
+
+        public bool IsModule { get; }
+
+        public bool IsInterface { get; }
+
+        public bool IsDispatch { get; }
+
+        public bool IsCoClass { get; }
 
         public virtual bool IsPrimitive { get; protected set; }
 

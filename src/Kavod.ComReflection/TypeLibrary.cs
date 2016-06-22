@@ -1,21 +1,17 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Kavod.ComReflection.Members;
 using Kavod.ComReflection.Types;
 using Array = Kavod.ComReflection.Types.Array;
 using Boolean = Kavod.ComReflection.Types.Boolean;
 using Byte = Kavod.ComReflection.Types.Byte;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 using Double = Kavod.ComReflection.Types.Double;
-using Enum = Kavod.ComReflection.Types.Enum;
 using Object = Kavod.ComReflection.Types.Object;
 using Single = Kavod.ComReflection.Types.Single;
 using String = Kavod.ComReflection.Types.String;
-using Type = Kavod.ComReflection.Types.Type;
 
 namespace Kavod.ComReflection
 {
@@ -85,27 +81,12 @@ namespace Kavod.ComReflection
                 switch (info.TypeAttr.typekind)
                 {
                     case ComTypes.TYPEKIND.TKIND_ENUM:
-                        _userDefinedTypes.Add(new Enum(info));
-                        break;
-
                     case ComTypes.TYPEKIND.TKIND_RECORD:
-                        _userDefinedTypes.Add(new Type(info));
-                        break;
-
                     case ComTypes.TYPEKIND.TKIND_MODULE:
-                        _userDefinedTypes.Add(new Module(info));
-                        break;
-
                     case ComTypes.TYPEKIND.TKIND_INTERFACE:   // VTABLE only, not dual.
-                        _userDefinedTypes.Add(new Interface(info));
-                        break;
-
                     case ComTypes.TYPEKIND.TKIND_DISPATCH:    // true dispatch type or dual type.
-                        _userDefinedTypes.Add(new Dispatch(info));
-                        break;
-
                     case ComTypes.TYPEKIND.TKIND_COCLASS:
-                        _userDefinedTypes.Add(new CoClass(info));
+                        _userDefinedTypes.Add(new VbaType(info));
                         break;
 
                     case ComTypes.TYPEKIND.TKIND_ALIAS:
@@ -306,14 +287,6 @@ namespace Kavod.ComReflection
         public IEnumerable<Enum> Enums => _userDefinedTypes.OfType<Enum>();
 
         public IEnumerable<Type> Types => _userDefinedTypes.OfType<Type>();
-
-        public IEnumerable<Module> Modules => _userDefinedTypes.OfType<Module>();
-
-        public IEnumerable<Interface> Interfaces => _userDefinedTypes.OfType<Interface>();
-
-        public IEnumerable<Dispatch> DispatchInterfaces => _userDefinedTypes.OfType<Dispatch>();
-
-        public IEnumerable<CoClass> CoClasses => _userDefinedTypes.OfType<CoClass>();
 
         public IEnumerable<VbaType> PrimitiveTypes => _primitives;
 

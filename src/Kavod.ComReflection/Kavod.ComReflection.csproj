@@ -85,12 +85,7 @@
     <Compile Include="Members\Field.cs" />
     <Compile Include="Members\Function.cs" />
     <Compile Include="Members\Method.cs" />
-    <Compile Include="Types\CoClass.cs" />
-    <Compile Include="Types\Dispatch.cs" />
-    <Compile Include="Types\Interface.cs" />
-    <Compile Include="Types\Module.cs" />
     <Compile Include="Types\Object.cs" />
-    <Compile Include="Types\Type.cs" />
     <Compile Include="Types\Any.cs" />
     <Compile Include="Types\Array.cs" />
     <Compile Include="Types\Boolean.cs" />
@@ -98,7 +93,6 @@
     <Compile Include="Types\Currency.cs" />
     <Compile Include="Types\Date.cs" />
     <Compile Include="Types\Double.cs" />
-    <Compile Include="Types\Enum.cs" />
     <Compile Include="Members\EnumMember.cs" />
     <Compile Include="Types\HResult.cs" />
     <Compile Include="Types\Integer.cs" />

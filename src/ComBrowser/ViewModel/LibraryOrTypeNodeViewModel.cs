@@ -48,27 +48,27 @@ namespace ComBrowser.ViewModel
 
         private void SetIconUriSource(VbaType type)
         {
-            if (type is Enum)
+            if (type.IsEnum)
             {
                 IconUriSource = @"\Resources\enum.png";
             }
-            else if (type is Type)
+            else if (type.IsType)
             {
                 IconUriSource = @"\Resources\type.png";
             }
-            else if (type is Module)
+            else if (type.IsModule)
             {
                 IconUriSource = @"\Resources\module.png";
             }
-            else if (type is Interface)
+            else if (type.IsInterface)
             {
                 IconUriSource = @"\Resources\interface.png";
             }
-            else if (type is Dispatch)
+            else if (type.IsDispatch)
             {
                 IconUriSource = @"\Resources\udt.png";
             }
-            else if (type is CoClass)
+            else if (type.IsCoClass)
             {
                 IconUriSource = @"\Resources\udt.png";
             }
