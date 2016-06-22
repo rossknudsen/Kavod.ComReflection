@@ -70,6 +70,7 @@ namespace Kavod.ComReflection
             MinorVersion = libAttr.wMinorVerNum;
 
             CreateTypeInformation();
+            BuildMembers();
         }
 
         private void CreateTypeInformation()
@@ -121,24 +122,24 @@ namespace Kavod.ComReflection
             {
                 AddAliasToType(a);  // possibly should create separate types.
             }
-            foreach (var i in UserDefinedTypes)
-            {
-                AddImplementedInterfaces(i);
-            }
-
-            AddEnumMembers();
-            AddInterfaceMembers();
-            AddTypeMembers();
-            AddModuleMembers();
-            AddAccessModifiers();
         }
 
-        private void AddAccessModifiers()
+        private void BuildMembers()
         {
             foreach (var type in UserDefinedTypes)
             {
-                var info = _infoAndAttrs.First(i => i.Name == type.Name);
+                AddImplementedInterfaces(type);
+                var info = _infoAndAttrs.First(a => a.Name == type.Name);
                 type.Hidden = info.TypeAttr.wTypeFlags.HasFlag(ComTypes.TYPEFLAGS.TYPEFLAG_FHIDDEN);
+
+                foreach (var method1 in BuildModuleMethods(info))
+                {
+                    type.AddMethod(method1);
+                }
+                foreach (var field in BuildModuleFields(info))
+                {
+                    type.AddField(field);
+                }
             }
         }
 
@@ -146,58 +147,6 @@ namespace Kavod.ComReflection
         {
             var type = GetType(info.TypeAttr.tdescAlias, info.TypeInfo);
             type.AddAlias(info.Name);
-        }
-
-        private void AddInterfaceMembers()
-        {
-            foreach (var @interface in Interfaces)
-            {
-                var info = _infoAndAttrs.First(i => i.Name == @interface.Name);
-                foreach (var method in BuildModuleMethods(info))
-                {
-                    @interface.AddMethod(method);
-                }
-            }
-        }
-
-        private void AddTypeMembers()
-        {
-            foreach (var type in Types)
-            {
-                var info = _infoAndAttrs.First(i => i.Name == type.Name);
-                foreach (var member in BuildTypeMembers(info))
-                {
-                    type.AddTypeMember(member);
-                }
-            }
-        }
-
-        private void AddEnumMembers()
-        {
-            foreach (var e in Enums)
-            {
-                var info = _infoAndAttrs.First(i => i.Name == e.Name);
-                foreach (var member in BuildEnumMembers(info))
-                {
-                    e.AddEnumMember(member);
-                }
-            }
-        }
-
-        private void AddModuleMembers()
-        {
-            foreach (var module in Modules)
-            {
-                var info = _infoAndAttrs.First(i => i.Name == module.Name);
-                foreach (var method in BuildModuleMethods(info))
-                {
-                    module.AddMethod(method);
-                }
-                foreach (var field in BuildModuleFields(info))
-                {
-                    module.AddField(field);
-                }
-            }
         }
 
         private IEnumerable<Field> BuildModuleFields(TypeInfoAndTypeAttr info)
@@ -219,41 +168,6 @@ namespace Kavod.ComReflection
 
             ConsolidateProperties(methods);
             return methods;
-        }
-
-        private IEnumerable<TypeMember> BuildTypeMembers(TypeInfoAndTypeAttr info)
-        {
-            foreach (var vardesc in ComHelper.GetTypeVariables(info))
-            {
-                var name = ComHelper.GetMemberName(info.TypeInfo, vardesc);
-                var type = GetType(vardesc.elemdescVar.tdesc, info.TypeInfo);
-                if (!ComHelper.IsConstant(vardesc))
-                {
-                    yield return new TypeMember(name, type, false);
-                }
-                else
-                {
-                    throw new NotImplementedException();
-                }
-            }
-        }
-
-        private IEnumerable<EnumMember> BuildEnumMembers(TypeInfoAndTypeAttr info)
-        {
-            foreach (var vardesc in ComHelper.GetTypeVariables(info))
-            {
-                var name = ComHelper.GetMemberName(info.TypeInfo, vardesc);
-                var type = GetType(vardesc.elemdescVar.tdesc, info.TypeInfo);
-                if (ComHelper.IsConstant(vardesc))
-                {
-                    var constantValue = ComHelper.GetConstantValue(vardesc);
-                    yield return new EnumMember(name, type, constantValue);
-                }
-                else
-                {
-                    throw new NotImplementedException();
-                }
-            }
         }
 
         private void AddImplementedInterfaces(VbaType type)
