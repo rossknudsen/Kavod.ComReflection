@@ -19,7 +19,7 @@ using Type = Kavod.ComReflection.Types.Type;
 
 namespace Kavod.ComReflection
 {
-    public class TypeLibrary
+    public class TypeLibrary : IVbaTypeRepository
     {
         private const string StdOleLibGuidString = "{00020430-0000-0000-C000-000000000046}";
         private static readonly Guid StdOleLibGuid = new Guid(StdOleLibGuidString);
@@ -129,44 +129,14 @@ namespace Kavod.ComReflection
             foreach (var type in UserDefinedTypes)
             {
                 AddImplementedInterfaces(type);
-                var info = _infoAndAttrs.First(a => a.Name == type.Name);
-
-                foreach (var method1 in BuildModuleMethods(info))
-                {
-                    type.AddMethod(method1);
-                }
-                foreach (var field in BuildModuleFields(info))
-                {
-                    type.AddField(field);
-                }
+                type.BuildMembers(this);
             }
         }
 
         private void AddAliasToType(TypeInfoAndTypeAttr info)
         {
-            var type = GetType(info.TypeAttr.tdescAlias, info.TypeInfo);
+            var type = GetVbaType(info.TypeAttr.tdescAlias, info.TypeInfo);
             type.AddAlias(info.Name);
-        }
-
-        private IEnumerable<Field> BuildModuleFields(TypeInfoAndTypeAttr info)
-        {
-            foreach (var vardesc in ComHelper.GetTypeVariables(info))
-            {
-                var name = ComHelper.GetMemberName(info.TypeInfo, vardesc);
-                var type = GetType(vardesc.elemdescVar.tdesc, info.TypeInfo);
-                var isConstant = ComHelper.IsConstant(vardesc);
-                yield return new Field(name, type, isConstant);
-            }
-        }
-
-        private IEnumerable<Method> BuildModuleMethods(TypeInfoAndTypeAttr info)
-        {
-            // build the methods for each type.
-            var methods = (from funcDesc in ComHelper.GetFuncDescs(info)
-                           select BuildMethod(funcDesc, info.TypeInfo)).ToList();
-
-            ConsolidateProperties(methods);
-            return methods;
         }
 
         private void AddImplementedInterfaces(VbaType type)
@@ -185,108 +155,7 @@ namespace Kavod.ComReflection
             }
         }
 
-        private static void ConsolidateProperties(List<Method> methods)
-        {
-            var i = 0;
-            while (i < methods.Count)
-            {
-                var currentMethod = methods[i] as Property;
-                if (currentMethod != null)
-                {
-                    // check to see if there is another property of the same name.
-                    var j = i + 1;
-                    while (j < methods.Count)
-                    {
-                        var nextMethod = methods[j] as Property;
-                        if (nextMethod != null
-                            && nextMethod.Name == currentMethod.Name)
-                        {
-                            // Consolidate the two properties.
-                            if (nextMethod.CanRead)
-                            {
-                                currentMethod.CanRead = true;
-                            }
-                            if (nextMethod.CanWrite)
-                            {
-                                currentMethod.CanWrite = true;
-                            }
-                            methods.Remove(nextMethod);
-                        }
-                        j++;
-                    }
-                }
-                i++;
-            }
-        }
-
-        private Method BuildMethod(ComTypes.FUNCDESC funcDesc, ComTypes.ITypeInfo typeInfo)
-        {
-            // collect parameters.
-            var parameters = new List<Parameter>();
-            var parameterNames = ComHelper.GetParameterNames(typeInfo, funcDesc).ToList();
-            var elemDescs = ComHelper.GetElemDescs(funcDesc).ToList();
-            for (var index = 0; index < parameterNames.Count; index++)
-            {
-                var elemDesc = elemDescs[index];
-                var flags = elemDesc.desc.paramdesc.wParamFlags;
-                var param = new Parameter(parameterNames[index], GetType(elemDesc.tdesc, typeInfo))
-                {
-                    IsOptional = flags.HasFlag(ComTypes.PARAMFLAG.PARAMFLAG_FOPT),
-                    IsOut = flags.HasFlag(ComTypes.PARAMFLAG.PARAMFLAG_FOUT),
-                    HasDefaultValue = flags.HasFlag(ComTypes.PARAMFLAG.PARAMFLAG_FHASDEFAULT)
-                };
-                if (param.HasDefaultValue)
-                {
-                    param.DefaultValue = ComHelper.GetDefaultValue(elemDesc.desc.paramdesc);
-                }
-                parameters.Add(param);
-            }
-
-            var name = ComHelper.GetMemberName(typeInfo, funcDesc);
-            var hidden = ((ComTypes.FUNCFLAGS)funcDesc.wFuncFlags).HasFlag(ComTypes.FUNCFLAGS.FUNCFLAG_FHIDDEN);
-            // TODO there are some other FUNCFLAGS that may be of interest.
-            if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYGET))
-            {
-                var returnType = GetType(funcDesc.elemdescFunc.tdesc, typeInfo);
-                var method = new Property(name, parameters, returnType, true, false)
-                {
-                    Hidden = hidden
-                };
-                return method;
-            }
-            if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_FUNC)
-                && (VarEnum)funcDesc.elemdescFunc.tdesc.vt != VarEnum.VT_VOID)
-            {
-                var returnType = GetType(funcDesc.elemdescFunc.tdesc, typeInfo);
-                var method = new Function(name, parameters, returnType)
-                {
-                    Hidden = hidden
-                };
-                return method;
-            }
-            if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYPUT)
-                || funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYPUTREF))
-            {
-                var returnType = GetType(funcDesc.elemdescFunc.tdesc, typeInfo);
-                var method = new Property(name, parameters, returnType, true, false)
-                {
-                    Hidden = hidden
-                };
-                return method;
-            }
-            if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_FUNC)
-                && (VarEnum)funcDesc.elemdescFunc.tdesc.vt == VarEnum.VT_VOID)
-            {
-                var method = new Sub(name, parameters)
-                {
-                    Hidden = hidden
-                };
-                return method;
-            }
-            throw new Exception();
-        }
-
-        private VbaType GetType(ComTypes.TYPEDESC tdesc, ComTypes.ITypeInfo context)
+        public VbaType GetVbaType(ComTypes.TYPEDESC tdesc, ComTypes.ITypeInfo context)
         {
             var vt = (VarEnum)tdesc.vt;
             ComTypes.TYPEDESC tdesc2;
@@ -294,7 +163,7 @@ namespace Kavod.ComReflection
             {
                 case VarEnum.VT_PTR:
                     tdesc2 = Marshal.PtrToStructure<ComTypes.TYPEDESC>(tdesc.lpValue);
-                    return GetType(tdesc2, context);
+                    return GetVbaType(tdesc2, context);
 
                 case VarEnum.VT_USERDEFINED:
                     if (context == null)
@@ -316,7 +185,7 @@ namespace Kavod.ComReflection
 
                 case VarEnum.VT_CARRAY:
                     tdesc2 = Marshal.PtrToStructure<ComTypes.TYPEDESC>(tdesc.lpValue);
-                    dynamic arrayType = GetType(tdesc2, context);
+                    dynamic arrayType = GetVbaType(tdesc2, context);
                     return Array.GetInstance(arrayType);
                 // lpValue is actually an ARRAYDESC structure containing dimension info.
 

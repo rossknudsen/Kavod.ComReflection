@@ -80,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ComHelper.cs" />
+    <Compile Include="IVbaTypeRepository.cs" />
     <Compile Include="Members\Constant.cs" />
     <Compile Include="Members\Field.cs" />
     <Compile Include="Members\Function.cs" />
