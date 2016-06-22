@@ -145,7 +145,7 @@ namespace Kavod.ComReflection.Types
             if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_FUNC)
                 && (VarEnum)funcDesc.elemdescFunc.tdesc.vt == VarEnum.VT_VOID)
             {
-                var method = new Sub(name, parameters)
+                var method = new Sub(name, parameters, returnType)
                 {
                     Hidden = hidden
                 };

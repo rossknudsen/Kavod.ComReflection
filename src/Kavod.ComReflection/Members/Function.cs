@@ -7,15 +7,13 @@ namespace Kavod.ComReflection.Members
 {
     public class Function : Method
     {
-        public Function(string name, IEnumerable<Parameter> parameters, VbaType returnType) : base(name, parameters)
+        public Function(string name, IEnumerable<Parameter> parameters, VbaType returnType) 
+            : base(name, parameters, returnType)
         {
             Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Contract.Requires<ArgumentNullException>(parameters != null);
-
-            ReturnType = returnType;
+            Contract.Requires<ArgumentNullException>(returnType != null);
         }
-
-        public VbaType ReturnType { get; }
 
         public override string ToSignatureString() => $"{Name}({ConvertParametersForSignature()}) As {ReturnType}";
     }
