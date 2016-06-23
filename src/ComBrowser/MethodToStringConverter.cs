@@ -59,9 +59,24 @@ namespace ComBrowser
                 {
                     builder.Append(", ");
                 }
-                builder.Append(p.ToSignatureString());
+                builder.Append(ConvertParameterForSignature(p));
             }
             return builder.ToString();
+        }
+
+        public static string ConvertParameterForSignature(Parameter parameter)
+        {
+            var result = "";
+            if (parameter.IsOptional)
+            {
+                result += "Optional ";
+            }
+            result += $"{parameter.ParamName} As {parameter.ParamType}";
+            if (parameter.HasDefaultValue)
+            {
+                result += $" = {parameter.DefaultValue}";
+            }
+            return result;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -21,20 +21,5 @@ namespace Kavod.ComReflection.Members
         public object DefaultValue { get; internal set; }
 
         public bool HasDefaultValue { get; internal set; }
-
-        public string ToSignatureString()
-        {
-            var result = "";
-            if (IsOptional)
-            {
-                result += "Optional ";
-            }
-            result += $"{ParamName} As {ParamType}";
-            if (HasDefaultValue)
-            {
-                result += $" = {DefaultValue}";
-            }
-            return result;
-        }
     }
 }
