@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using Kavod.ComReflection.Types;
 using FUNCDESC = System.Runtime.InteropServices.ComTypes.FUNCDESC;
+using Void = Kavod.ComReflection.Types.Void;
 
 namespace Kavod.ComReflection.Members
 {
@@ -19,6 +20,7 @@ namespace Kavod.ComReflection.Members
             Contract.Requires<ArgumentNullException>(repo != null);
 
             BuildMethod(funcDesc, info, repo);
+            RewriteHResult();
         }
 
         public string Name { get; private set; }
@@ -79,6 +81,29 @@ namespace Kavod.ComReflection.Members
             else
             {
                 throw new NotImplementedException();
+            }
+        }
+
+        private void RewriteHResult()
+        {
+            if (ReturnType is HResult)
+            {
+                var outParams = Parameters.Where(p => p.IsOut).ToList();
+                switch (outParams.Count)
+                {
+                    case 0:
+                        IsFunction = false;
+                        IsSubroutine = true;
+                        IsProperty = false;
+                        ReturnType = Void.Instance;
+                        break;
+
+                    case 1:
+                        var outParam = outParams[0];
+                        _parameters.Remove(outParam);
+                        ReturnType = outParam.ParamType;
+                        break;
+                }
             }
         }
     }

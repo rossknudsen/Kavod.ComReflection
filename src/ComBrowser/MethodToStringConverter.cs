@@ -71,6 +71,10 @@ namespace ComBrowser
             {
                 result += "Optional ";
             }
+            if (parameter.IsOut)
+            {
+                result += "Out ";
+            }
             result += $"{parameter.ParamName} As {parameter.ParamType}";
             if (parameter.HasDefaultValue)
             {
