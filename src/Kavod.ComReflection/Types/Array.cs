@@ -22,7 +22,5 @@ namespace Kavod.ComReflection.Types
         }
 
         public VbaType ArrayType { get; }
-
-        public override string ToString() => nameof(Array);
     }
 }

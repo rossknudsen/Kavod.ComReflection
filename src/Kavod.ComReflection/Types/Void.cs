@@ -2,7 +2,7 @@
 {
     public class Void : VbaType
     {
-        internal static Void Instance = new Void();
+        public static readonly Void Instance = new Void();
 
         public Void() : base(nameof(Void)) { }
     }
