@@ -35,10 +35,6 @@ namespace ComBrowser.ViewModel
             {
                 TypesOrMembers.Add(new MemberViewModel(m));
             }
-            foreach (var m in type.EnumMembers)
-            {
-                TypesOrMembers.Add(new MemberViewModel(m));
-            }
             if (type.Hidden)
             {
                 AccessUriSource = @"\Resources\lock.png";

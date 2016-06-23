@@ -8,7 +8,8 @@ namespace ComBrowser.ViewModel
 {
     public class MemberViewModel : ViewModelBase
     {
-        private static MethodToStringConverter _converter = new MethodToStringConverter();
+        private static MethodToStringConverter _methodConverter = new MethodToStringConverter();
+        private static FieldToStringConverter _fieldConverter = new FieldToStringConverter();
         private static Color DefaultFontColor = Colors.Black;
         private static Color HiddenFontColor = Colors.DarkGray;
 
@@ -18,7 +19,7 @@ namespace ComBrowser.ViewModel
             {
                 FontColor = HiddenFontColor;
             }
-            Name = (string) _converter.Convert(method, typeof(string), null, CultureInfo.CurrentCulture);
+            Name = (string) _methodConverter.Convert(method, typeof(string), null, CultureInfo.CurrentCulture);
         }
 
         public MemberViewModel(VbaType type)
@@ -32,7 +33,7 @@ namespace ComBrowser.ViewModel
 
         public MemberViewModel(Field field)
         {
-            Name = field.ToSignatureString();
+            Name = (string) _fieldConverter.Convert(field, typeof(string), null, CultureInfo.CurrentCulture);
         }
 
         public string Name { get; set; }

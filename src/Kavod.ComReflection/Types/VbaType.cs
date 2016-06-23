@@ -13,8 +13,6 @@ namespace Kavod.ComReflection.Types
         protected readonly List<Field> _fields = new List<Field>();
         protected readonly List<Method> _methods = new List<Method>();
         protected readonly List<VbaType> _implementedTypes = new List<VbaType>();
-        protected readonly List<EnumMember> _enumMembers = new List<EnumMember>();
-        protected readonly List<TypeMember> _members = new List<TypeMember>();
         protected HashSet<string> _aliases = new HashSet<string>();
 
         public VbaType(TypeInfoAndTypeAttr info) : this(info.Name)
@@ -70,10 +68,7 @@ namespace Kavod.ComReflection.Types
         {
             foreach (var vardesc in ComHelper.GetTypeVariables(_info))
             {
-                var name = ComHelper.GetMemberName(_info.TypeInfo, vardesc);
-                var type = repo.GetVbaType(vardesc.elemdescVar.tdesc, _info.TypeInfo);
-                var isConstant = ComHelper.IsConstant(vardesc);
-                AddField(new Field(name, type, isConstant));
+                AddField(new Field(vardesc, _info.TypeInfo, repo));
             }
         }
 
@@ -127,10 +122,6 @@ namespace Kavod.ComReflection.Types
 
         public IEnumerable<Method> Methods => _methods;
 
-        public IEnumerable<EnumMember> EnumMembers => _enumMembers;
-
-        public IEnumerable<TypeMember> TypeMembers => _members;
-
         public IEnumerable<string> Aliases => _aliases;
 
         public bool IsEnum { get; }
@@ -177,16 +168,6 @@ namespace Kavod.ComReflection.Types
         internal void AddMethods(IEnumerable<Method> methods)
         {
             _methods.AddRange(methods);
-        }
-
-        public void AddEnumMember(EnumMember member)
-        {
-            _enumMembers.Add(member);
-        }
-
-        public void AddTypeMember(TypeMember member)
-        {
-            _members.Add(member);
         }
 
         public void AddAlias(string alias)

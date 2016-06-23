@@ -81,7 +81,6 @@
   <ItemGroup>
     <Compile Include="ComHelper.cs" />
     <Compile Include="IVbaTypeRepository.cs" />
-    <Compile Include="Members\Constant.cs" />
     <Compile Include="Members\Field.cs" />
     <Compile Include="Members\Method.cs" />
     <Compile Include="Types\Object.cs" />
@@ -92,11 +91,9 @@
     <Compile Include="Types\Currency.cs" />
     <Compile Include="Types\Date.cs" />
     <Compile Include="Types\Double.cs" />
-    <Compile Include="Members\EnumMember.cs" />
     <Compile Include="Types\HResult.cs" />
     <Compile Include="Types\Integer.cs" />
     <Compile Include="Types\Long.cs" />
-    <Compile Include="Members\TypeMember.cs" />
     <Compile Include="Types\VbaType.cs" />
     <Compile Include="Members\Parameter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

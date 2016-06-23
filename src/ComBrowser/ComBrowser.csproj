@@ -80,6 +80,7 @@
     <Compile Include="Controls\LibraryTypeListControl.xaml.cs">
       <DependentUpon>LibraryTypeListControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="FieldToStringConverter.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="MethodToStringConverter.cs" />
     <Compile Include="Views\ShowLibraryRegistrationsDialog.xaml.cs">

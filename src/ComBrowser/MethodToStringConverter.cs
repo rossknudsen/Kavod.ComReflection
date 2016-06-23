@@ -19,7 +19,7 @@ namespace ComBrowser
             var method = value as Method;
             if (method == null)
             {
-                return value.ToString();
+                return value?.ToString();
             }
 
             if (method.IsFunction)
