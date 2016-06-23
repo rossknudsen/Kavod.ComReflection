@@ -1,25 +1,42 @@
+using System;
+using System.Diagnostics.Contracts;
+using System.Runtime.InteropServices.ComTypes;
 using Kavod.ComReflection.Types;
 
 namespace Kavod.ComReflection.Members
 {
     public class Parameter
     {
-        public Parameter(string paramName, VbaType paramType)
+        public Parameter(string paramName, ELEMDESC elemDesc, ITypeInfo info, IVbaTypeRepository repo)
         {
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(paramName));
+            Contract.Requires<ArgumentNullException>(info != null);
+            Contract.Requires<ArgumentNullException>(repo != null);
+
+            ParamType = repo.GetVbaType(elemDesc.tdesc, info);
             ParamName = paramName;
-            ParamType = paramType;
+
+            var flags = elemDesc.desc.paramdesc.wParamFlags;
+            IsOptional = flags.HasFlag(PARAMFLAG.PARAMFLAG_FOPT);
+            IsOut = flags.HasFlag(PARAMFLAG.PARAMFLAG_FOUT);
+            HasDefaultValue = flags.HasFlag(PARAMFLAG.PARAMFLAG_FHASDEFAULT);
+
+            if (HasDefaultValue)
+            {
+                DefaultValue = ComHelper.GetDefaultValue(elemDesc.desc.paramdesc);
+            }
         }
 
-        public string ParamName { get; internal set; }
+        public string ParamName { get; }
 
-        public VbaType ParamType { get; internal set; }
+        public VbaType ParamType { get; }
 
-        public bool IsOptional { get; internal set; }
+        public bool IsOptional { get; }
 
-        public bool IsOut { get; internal set; }
+        public bool IsOut { get; }
 
-        public object DefaultValue { get; internal set; }
+        public object DefaultValue { get; }
 
-        public bool HasDefaultValue { get; internal set; }
+        public bool HasDefaultValue { get; }
     }
 }

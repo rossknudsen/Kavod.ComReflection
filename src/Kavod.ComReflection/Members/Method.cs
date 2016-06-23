@@ -47,17 +47,7 @@ namespace Kavod.ComReflection.Members
             for (var index = 0; index < parameterNames.Count; index++)
             {
                 var elemDesc = elemDescs[index];
-                var flags = elemDesc.desc.paramdesc.wParamFlags;
-                var param = new Parameter(parameterNames[index], repo.GetVbaType(elemDesc.tdesc, info))
-                {
-                    IsOptional = flags.HasFlag(System.Runtime.InteropServices.ComTypes.PARAMFLAG.PARAMFLAG_FOPT),
-                    IsOut = flags.HasFlag(System.Runtime.InteropServices.ComTypes.PARAMFLAG.PARAMFLAG_FOUT),
-                    HasDefaultValue = flags.HasFlag(System.Runtime.InteropServices.ComTypes.PARAMFLAG.PARAMFLAG_FHASDEFAULT)
-                };
-                if (param.HasDefaultValue)
-                {
-                    param.DefaultValue = ComHelper.GetDefaultValue(elemDesc.desc.paramdesc);
-                }
+                var param = new Parameter(parameterNames[index], elemDesc, info, repo);
                 _parameters.Add(param);
             }
 
