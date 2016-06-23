@@ -10,11 +10,11 @@ using Void = Kavod.ComReflection.Types.Void;
 
 namespace Kavod.ComReflection.Members
 {
-    public class Method
+    public class MethodInfo
     {
-        private readonly List<Parameter> _parameters = new List<Parameter>();
+        private readonly List<ParameterInfo> _parameters = new List<ParameterInfo>();
 
-        internal Method(FUNCDESC funcDesc, ITypeInfo info, IVbaTypeRepository repo)
+        internal MethodInfo(FUNCDESC funcDesc, ITypeInfo info, IVbaTypeRepository repo)
         {
             Contract.Requires<ArgumentNullException>(info != null);
             Contract.Requires<ArgumentNullException>(repo != null);
@@ -25,7 +25,7 @@ namespace Kavod.ComReflection.Members
 
         public string Name { get; private set; }
 
-        public IEnumerable<Parameter> Parameters => _parameters;
+        public IEnumerable<ParameterInfo> Parameters => _parameters;
 
         public bool Hidden { get; private set; }
 
@@ -49,7 +49,7 @@ namespace Kavod.ComReflection.Members
             for (var index = 0; index < parameterNames.Count; index++)
             {
                 var elemDesc = elemDescs[index];
-                var param = new Parameter(parameterNames[index], elemDesc, info, repo);
+                var param = new ParameterInfo(parameterNames[index], elemDesc, info, repo);
                 _parameters.Add(param);
             }
 

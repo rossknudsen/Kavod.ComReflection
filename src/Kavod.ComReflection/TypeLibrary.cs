@@ -128,12 +128,7 @@ namespace Kavod.ComReflection
             var info = _infoAndAttrs.First(i => i.Name == type.Name);
             foreach (var inherited in ComHelper.GetInheritedTypeInfos(info))
             {
-                var implemented = FindExistingType(inherited);
-                if (implemented == null)
-                {
-                    LoadTypeLibrary(inherited);
-                    implemented = FindExistingType(inherited);
-                }
+                var implemented = FindOrLoadType(inherited);
                 type.AddImplementedType(implemented);
             }
         }
@@ -154,12 +149,7 @@ namespace Kavod.ComReflection
                         throw new InvalidOperationException($"{nameof(context)} is null.  This is required for {VarEnum.VT_USERDEFINED}");
                     }
                     var refTypeInfo = ComHelper.GetRefTypeInfo(tdesc, context);
-                    var loadedType = FindExistingType(refTypeInfo);
-                    if (loadedType == null)
-                    {
-                        LoadTypeLibrary(refTypeInfo);
-                        loadedType = FindExistingType(refTypeInfo);
-                    }
+                    var loadedType = FindOrLoadType(refTypeInfo);
                     return loadedType;
 
                 case VarEnum.VT_UNKNOWN:
@@ -249,6 +239,17 @@ namespace Kavod.ComReflection
                 default:
                     throw new NotImplementedException();
             }
+        }
+
+        private VbaType FindOrLoadType(ComTypes.ITypeInfo info)
+        {
+            var implemented = FindExistingType(info);
+            if (implemented == null)
+            {
+                LoadTypeLibrary(info);
+                implemented = FindExistingType(info);
+            }
+            return implemented;
         }
 
         private VbaType FindExistingType(ComTypes.ITypeInfo info)

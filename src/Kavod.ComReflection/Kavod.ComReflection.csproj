@@ -81,8 +81,8 @@
   <ItemGroup>
     <Compile Include="ComHelper.cs" />
     <Compile Include="IVbaTypeRepository.cs" />
-    <Compile Include="Members\Field.cs" />
-    <Compile Include="Members\Method.cs" />
+    <Compile Include="Members\FieldInfo.cs" />
+    <Compile Include="Members\MethodInfo.cs" />
     <Compile Include="Types\Object.cs" />
     <Compile Include="Types\Any.cs" />
     <Compile Include="Types\Array.cs" />
@@ -95,7 +95,7 @@
     <Compile Include="Types\Integer.cs" />
     <Compile Include="Types\Long.cs" />
     <Compile Include="Types\VbaType.cs" />
-    <Compile Include="Members\Parameter.cs" />
+    <Compile Include="Members\ParameterInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TypeInfoAndTypeAttr.cs" />
     <Compile Include="TypeLibraries.cs" />

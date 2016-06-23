@@ -10,8 +10,8 @@ namespace Kavod.ComReflection.Types
     public class VbaType
     {
         protected readonly TypeInfoAndTypeAttr _info;
-        protected readonly List<Field> _fields = new List<Field>();
-        protected readonly List<Method> _methods = new List<Method>();
+        protected readonly List<FieldInfo> _fields = new List<FieldInfo>();
+        protected readonly List<MethodInfo> _methods = new List<MethodInfo>();
         protected readonly List<VbaType> _implementedTypes = new List<VbaType>();
         protected HashSet<string> _aliases = new HashSet<string>();
 
@@ -68,21 +68,21 @@ namespace Kavod.ComReflection.Types
         {
             foreach (var vardesc in ComHelper.GetTypeVariables(_info))
             {
-                AddField(new Field(vardesc, _info.TypeInfo, repo));
+                _fields.Add(new FieldInfo(vardesc, _info.TypeInfo, repo));
             }
         }
 
         private void BuildMethods(IVbaTypeRepository repo)
         {
             var methods = (from funcDesc in ComHelper.GetFuncDescs(_info)
-                           select new Method(funcDesc, _info.TypeInfo, repo)).ToList();
+                           select new MethodInfo(funcDesc, _info.TypeInfo, repo)).ToList();
 
             ConsolidateProperties(methods);
 
             _methods.AddRange(methods);
         }
 
-        private static void ConsolidateProperties(List<Method> methods)
+        private static void ConsolidateProperties(List<MethodInfo> methods)
         {
             var i = 0;
             while (i < methods.Count)
@@ -118,9 +118,9 @@ namespace Kavod.ComReflection.Types
 
         public string Name { get; protected set; }
 
-        public IEnumerable<Field> Fields => _fields;
+        public IEnumerable<FieldInfo> Fields => _fields;
 
-        public IEnumerable<Method> Methods => _methods;
+        public IEnumerable<MethodInfo> Methods => _methods;
 
         public IEnumerable<string> Aliases => _aliases;
 
@@ -148,26 +148,6 @@ namespace Kavod.ComReflection.Types
         internal void AddImplementedTypes(IEnumerable<VbaType> implTypes)
         {
             _implementedTypes.AddRange(implTypes);
-        }
-
-        internal void AddField(Field field)
-        {
-            _fields.Add(field);
-        }
-
-        internal void AddFields(IEnumerable<Field> fields)
-        {
-            _fields.AddRange(fields);
-        }
-        
-        internal void AddMethod(Method method)
-        {
-            _methods.Add(method);
-        }
-
-        internal void AddMethods(IEnumerable<Method> methods)
-        {
-            _methods.AddRange(methods);
         }
 
         public void AddAlias(string alias)

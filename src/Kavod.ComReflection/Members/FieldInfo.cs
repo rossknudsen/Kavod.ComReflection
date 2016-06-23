@@ -3,9 +3,9 @@ using Kavod.ComReflection.Types;
 
 namespace Kavod.ComReflection.Members
 {
-    public class Field
+    public class FieldInfo
     {
-        public Field(VARDESC vardesc, ITypeInfo info, IVbaTypeRepository repo)
+        public FieldInfo(VARDESC vardesc, ITypeInfo info, IVbaTypeRepository repo)
         {
             Name = ComHelper.GetMemberName(info, vardesc);
             Type = repo.GetVbaType(vardesc.elemdescVar.tdesc, info);
@@ -21,7 +21,7 @@ namespace Kavod.ComReflection.Members
             }
         }
 
-        public Field(string name, VbaType type, object value, bool isConstant)
+        public FieldInfo(string name, VbaType type, object value, bool isConstant)
         {
             Name = name;
             Type = type;

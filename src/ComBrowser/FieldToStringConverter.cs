@@ -15,7 +15,7 @@ namespace ComBrowser
                 return null;
             }
 
-            var field = value as Field;
+            var field = value as FieldInfo;
             if (field == null)
             {
                 return value?.ToString();

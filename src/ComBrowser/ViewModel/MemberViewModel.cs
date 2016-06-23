@@ -13,13 +13,13 @@ namespace ComBrowser.ViewModel
         private static Color DefaultFontColor = Colors.Black;
         private static Color HiddenFontColor = Colors.DarkGray;
 
-        public MemberViewModel(Method method)
+        public MemberViewModel(MethodInfo methodInfo)
         {
-            if (method.Hidden)
+            if (methodInfo.Hidden)
             {
                 FontColor = HiddenFontColor;
             }
-            Name = (string) _methodConverter.Convert(method, typeof(string), null, CultureInfo.CurrentCulture);
+            Name = (string) _methodConverter.Convert(methodInfo, typeof(string), null, CultureInfo.CurrentCulture);
         }
 
         public MemberViewModel(VbaType type)
@@ -31,9 +31,9 @@ namespace ComBrowser.ViewModel
             Name = type.Name;
         }
 
-        public MemberViewModel(Field field)
+        public MemberViewModel(FieldInfo fieldInfo)
         {
-            Name = (string) _fieldConverter.Convert(field, typeof(string), null, CultureInfo.CurrentCulture);
+            Name = (string) _fieldConverter.Convert(fieldInfo, typeof(string), null, CultureInfo.CurrentCulture);
         }
 
         public string Name { get; set; }

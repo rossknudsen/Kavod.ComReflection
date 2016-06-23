@@ -5,9 +5,9 @@ using Kavod.ComReflection.Types;
 
 namespace Kavod.ComReflection.Members
 {
-    public class Parameter
+    public class ParameterInfo
     {
-        public Parameter(string paramName, ELEMDESC elemDesc, ITypeInfo info, IVbaTypeRepository repo)
+        public ParameterInfo(string paramName, ELEMDESC elemDesc, ITypeInfo info, IVbaTypeRepository repo)
         {
             Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(paramName));
             Contract.Requires<ArgumentNullException>(info != null);

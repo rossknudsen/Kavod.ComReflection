@@ -16,7 +16,7 @@ namespace ComBrowser
                 return null;
             }
 
-            var method = value as Method;
+            var method = value as MethodInfo;
             if (method == null)
             {
                 return value?.ToString();
@@ -50,10 +50,10 @@ namespace ComBrowser
             throw new NotImplementedException();
         }
 
-        private static string ConvertParametersForSignature(Method method)
+        private static string ConvertParametersForSignature(MethodInfo methodInfo)
         {
             var builder = new StringBuilder();
-            foreach (var p in method.Parameters)
+            foreach (var p in methodInfo.Parameters)
             {
                 if (builder.Length > 0)
                 {
@@ -64,21 +64,21 @@ namespace ComBrowser
             return builder.ToString();
         }
 
-        public static string ConvertParameterForSignature(Parameter parameter)
+        public static string ConvertParameterForSignature(ParameterInfo parameterInfo)
         {
             var result = "";
-            if (parameter.IsOptional)
+            if (parameterInfo.IsOptional)
             {
                 result += "Optional ";
             }
-            if (parameter.IsOut)
+            if (parameterInfo.IsOut)
             {
                 result += "Out ";
             }
-            result += $"{parameter.ParamName} As {parameter.ParamType}";
-            if (parameter.HasDefaultValue)
+            result += $"{parameterInfo.ParamName} As {parameterInfo.ParamType}";
+            if (parameterInfo.HasDefaultValue)
             {
-                result += $" = {parameter.DefaultValue}";
+                result += $" = {parameterInfo.DefaultValue}";
             }
             return result;
         }
