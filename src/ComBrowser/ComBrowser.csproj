@@ -81,6 +81,7 @@
       <DependentUpon>LibraryTypeListControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Messages.cs" />
+    <Compile Include="MethodToStringConverter.cs" />
     <Compile Include="Views\ShowLibraryRegistrationsDialog.xaml.cs">
       <DependentUpon>ShowLibraryRegistrationsDialog.xaml</DependentUpon>
     </Compile>

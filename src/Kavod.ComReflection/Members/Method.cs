@@ -1,46 +1,95 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Text;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using Kavod.ComReflection.Types;
+using FUNCDESC = System.Runtime.InteropServices.ComTypes.FUNCDESC;
 
 namespace Kavod.ComReflection.Members
 {
-    public abstract class Method
+    public class Method
     {
-        protected Method(string name, IEnumerable<Parameter> parameters, VbaType returnType)
-        {
-            Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Contract.Requires<ArgumentNullException>(parameters != null);
-            Contract.Requires<ArgumentNullException>(returnType != null);
+        private readonly List<Parameter> _parameters = new List<Parameter>();
 
-            Name = name;
-            Parameters = parameters;
-            ReturnType = returnType;
+        internal Method(FUNCDESC funcDesc, ITypeInfo info, IVbaTypeRepository repo)
+        {
+            Contract.Requires<ArgumentNullException>(info != null);
+            Contract.Requires<ArgumentNullException>(repo != null);
+
+            BuildMethod(funcDesc, info, repo);
         }
 
-        public string Name { get; }
+        public string Name { get; private set; }
 
-        public IEnumerable<Parameter> Parameters { get; }
+        public IEnumerable<Parameter> Parameters => _parameters;
 
-        public bool Hidden { get; internal set; }
+        public bool Hidden { get; private set; }
 
-        public VbaType ReturnType { get; }
+        public bool CanRead { get; internal set; }
 
-        public abstract string ToSignatureString();
+        public bool CanWrite { get; internal set; }
 
-        protected string ConvertParametersForSignature()
+        public VbaType ReturnType { get; private set; }
+
+        public bool IsProperty { get; private set; }
+
+        public bool IsFunction { get; private set; }
+
+        public bool IsSubroutine { get; private set; }
+
+        private void BuildMethod(FUNCDESC funcDesc, ITypeInfo info, IVbaTypeRepository repo)
         {
-            var builder = new StringBuilder();
-            foreach (var p in Parameters)
+            // collect parameters.
+            var parameterNames = ComHelper.GetParameterNames(info, funcDesc).ToList();
+            var elemDescs = ComHelper.GetElemDescs(funcDesc).ToList();
+            for (var index = 0; index < parameterNames.Count; index++)
             {
-                if (builder.Length > 0)
+                var elemDesc = elemDescs[index];
+                var flags = elemDesc.desc.paramdesc.wParamFlags;
+                var param = new Parameter(parameterNames[index], repo.GetVbaType(elemDesc.tdesc, info))
                 {
-                    builder.Append(", ");
+                    IsOptional = flags.HasFlag(System.Runtime.InteropServices.ComTypes.PARAMFLAG.PARAMFLAG_FOPT),
+                    IsOut = flags.HasFlag(System.Runtime.InteropServices.ComTypes.PARAMFLAG.PARAMFLAG_FOUT),
+                    HasDefaultValue = flags.HasFlag(System.Runtime.InteropServices.ComTypes.PARAMFLAG.PARAMFLAG_FHASDEFAULT)
+                };
+                if (param.HasDefaultValue)
+                {
+                    param.DefaultValue = ComHelper.GetDefaultValue(elemDesc.desc.paramdesc);
                 }
-                builder.Append(p.ToSignatureString());
+                _parameters.Add(param);
             }
-            return builder.ToString();
+
+            Name = ComHelper.GetMemberName(info, funcDesc);
+            ReturnType = repo.GetVbaType(funcDesc.elemdescFunc.tdesc, info);
+            Hidden = ((System.Runtime.InteropServices.ComTypes.FUNCFLAGS)funcDesc.wFuncFlags).HasFlag(System.Runtime.InteropServices.ComTypes.FUNCFLAGS.FUNCFLAG_FHIDDEN);
+
+            if (funcDesc.invkind.HasFlag(System.Runtime.InteropServices.ComTypes.INVOKEKIND.INVOKE_PROPERTYGET))
+            {
+                IsProperty = true;
+                CanRead = true;
+            }
+            else if (funcDesc.invkind.HasFlag(System.Runtime.InteropServices.ComTypes.INVOKEKIND.INVOKE_FUNC)
+                && (VarEnum)funcDesc.elemdescFunc.tdesc.vt != VarEnum.VT_VOID)
+            {
+                IsFunction = true;
+            }
+            else if (funcDesc.invkind.HasFlag(System.Runtime.InteropServices.ComTypes.INVOKEKIND.INVOKE_PROPERTYPUT)
+                || funcDesc.invkind.HasFlag(System.Runtime.InteropServices.ComTypes.INVOKEKIND.INVOKE_PROPERTYPUTREF))
+            {
+                IsProperty = true;
+                CanWrite = true;
+            }
+            else if (funcDesc.invkind.HasFlag(System.Runtime.InteropServices.ComTypes.INVOKEKIND.INVOKE_FUNC)
+                && (VarEnum)funcDesc.elemdescFunc.tdesc.vt == VarEnum.VT_VOID)
+            {
+                IsSubroutine = true;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

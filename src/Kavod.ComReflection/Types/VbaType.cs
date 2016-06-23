@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Kavod.ComReflection.Members;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 
@@ -80,78 +79,12 @@ namespace Kavod.ComReflection.Types
 
         private void BuildMethods(IVbaTypeRepository repo)
         {
-            // build the methods for each type.
             var methods = (from funcDesc in ComHelper.GetFuncDescs(_info)
-                           select BuildMethod(funcDesc, repo)).ToList();
+                           select new Method(funcDesc, _info.TypeInfo, repo)).ToList();
 
             ConsolidateProperties(methods);
 
             _methods.AddRange(methods);
-        }
-
-        private Method BuildMethod(ComTypes.FUNCDESC funcDesc, IVbaTypeRepository repo)
-        {
-            // collect parameters.
-            var parameters = new List<Parameter>();
-            var parameterNames = ComHelper.GetParameterNames(_info.TypeInfo, funcDesc).ToList();
-            var elemDescs = ComHelper.GetElemDescs(funcDesc).ToList();
-            for (var index = 0; index < parameterNames.Count; index++)
-            {
-                var elemDesc = elemDescs[index];
-                var flags = elemDesc.desc.paramdesc.wParamFlags;
-                var param = new Parameter(parameterNames[index], repo.GetVbaType(elemDesc.tdesc, _info.TypeInfo))
-                {
-                    IsOptional = flags.HasFlag(ComTypes.PARAMFLAG.PARAMFLAG_FOPT),
-                    IsOut = flags.HasFlag(ComTypes.PARAMFLAG.PARAMFLAG_FOUT),
-                    HasDefaultValue = flags.HasFlag(ComTypes.PARAMFLAG.PARAMFLAG_FHASDEFAULT)
-                };
-                if (param.HasDefaultValue)
-                {
-                    param.DefaultValue = ComHelper.GetDefaultValue(elemDesc.desc.paramdesc);
-                }
-                parameters.Add(param);
-            }
-
-            var name = ComHelper.GetMemberName(_info.TypeInfo, funcDesc);
-            var returnType = repo.GetVbaType(funcDesc.elemdescFunc.tdesc, _info.TypeInfo);
-            var hidden = ((ComTypes.FUNCFLAGS)funcDesc.wFuncFlags).HasFlag(ComTypes.FUNCFLAGS.FUNCFLAG_FHIDDEN);
-            // TODO there are some other FUNCFLAGS that may be of interest.
-            if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYGET))
-            {
-                var method = new Property(name, parameters, returnType, true, false)
-                {
-                    Hidden = hidden
-                };
-                return method;
-            }
-            if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_FUNC)
-                && (VarEnum)funcDesc.elemdescFunc.tdesc.vt != VarEnum.VT_VOID)
-            {
-                var method = new Function(name, parameters, returnType)
-                {
-                    Hidden = hidden
-                };
-                return method;
-            }
-            if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYPUT)
-                || funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_PROPERTYPUTREF))
-            {
-                var method = new Property(name, parameters, returnType, true, false)
-                {
-                    Hidden = hidden
-                };
-                return method;
-            }
-            if (funcDesc.invkind.HasFlag(ComTypes.INVOKEKIND.INVOKE_FUNC)
-                && (VarEnum)funcDesc.elemdescFunc.tdesc.vt == VarEnum.VT_VOID)
-            {
-                var method = new Sub(name, parameters, returnType)
-                {
-                    Hidden = hidden
-                };
-                return method;
-            }
-            throw new Exception();
         }
 
         private static void ConsolidateProperties(List<Method> methods)
@@ -159,15 +92,15 @@ namespace Kavod.ComReflection.Types
             var i = 0;
             while (i < methods.Count)
             {
-                var currentMethod = methods[i] as Property;
-                if (currentMethod != null)
+                var currentMethod = methods[i];
+                if (currentMethod.IsProperty)
                 {
                     // check to see if there is another property of the same name.
                     var j = i + 1;
                     while (j < methods.Count)
                     {
-                        var nextMethod = methods[j] as Property;
-                        if (nextMethod != null
+                        var nextMethod = methods[j];
+                        if (nextMethod.IsProperty
                             && nextMethod.Name == currentMethod.Name)
                         {
                             // Consolidate the two properties.
