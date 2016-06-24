@@ -116,13 +116,13 @@ namespace Kavod.ComReflection
                     var win32Path = string.Empty;
                     var win64Path = string.Empty;
 
-                    foreach (var win32Key in EnumerateSubKeys(patchKey, k => k.Name.EndsWith("win32")))
+                    foreach (var win32Key in EnumerateSubKeys(patchKey))
                     {
-                        if (win32Key.Name.EndsWith("win32"))
+                        if (win32Key.Name.EndsWith("win32", StringComparison.InvariantCultureIgnoreCase))
                         {
                             win32Path = (string) win32Key.GetValue("") ?? string.Empty;
                         }
-                        else if (win32Key.Name.EndsWith("win64"))
+                        else if (win32Key.Name.EndsWith("win64", StringComparison.InvariantCultureIgnoreCase))
                         {
                             win64Path = (string) win32Key.GetValue("") ?? string.Empty;
                         }
