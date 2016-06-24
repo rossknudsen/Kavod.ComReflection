@@ -10,18 +10,40 @@ namespace Kavod.ComReflection
 {
     public class LibraryRegistration
     {
-        internal LibraryRegistration(string filePath, string name)
+        private LibraryRegistration(string filePath, string name, Version version, Guid guid)
         {
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(filePath));
+            Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
             Name = name;
             FilePath = filePath;
+            Guid = guid;
+
+            short minor;
+            short major;
+            if (short.TryParse(version.MinorVersion, out minor)
+                && short.TryParse(version.MajorVersion, out major))
+            {
+                MajorVersion = major;
+                MinorVersion = minor;
+            }
         }
 
         public string FilePath { get; }
 
         public string Name { get; }
 
+        public short MajorVersion { get; }
+
+        public short MinorVersion { get; }
+
+        public Guid Guid { get; }
+
         public static IEnumerable<LibraryRegistration> GetRegisteredTypeLibraryEntries()
         {
+            // TODO sometimes there is more than one registration per file path i.e. with different GUIDs.
+            // need to decide how to cope with this.
+
             var dictionary = new Dictionary<string, LibraryRegistration>();
             foreach (var e in GetComTypeRegistryEntries())
             {
@@ -29,7 +51,8 @@ namespace Kavod.ComReflection
                 {
                     if (!dictionary.ContainsKey(e.FilePath))
                     {
-                        dictionary[e.FilePath] = new LibraryRegistration(e.FilePath, e.Name);
+                        dictionary[e.FilePath] = 
+                            new LibraryRegistration(e.FilePath, e.Name, e.Version, e.Guid);
                     }
                 }
             }
@@ -45,8 +68,8 @@ namespace Kavod.ComReflection
                 {
                     throw new InvalidOperationException();
                 }
-                var entry = EnumerateRegistryEntryVersions(libKey).First();
-                return new LibraryRegistration(entry.FilePath, entry.Name);
+                var entry = EnumerateRegistryEntryVersions(libKey, guid).First();
+                return new LibraryRegistration(entry.FilePath, entry.Name, entry.Version, guid);
             }
         }
 
@@ -69,13 +92,13 @@ namespace Kavod.ComReflection
                         continue;
                     }
                     
-                    foreach (var entry in EnumerateRegistryEntryVersions(typeLibKey))
+                    foreach (var entry in EnumerateRegistryEntryVersions(typeLibKey, clsid))
                         yield return entry;
                 }
             }
         }
 
-        private static IEnumerable<ComTypeRegistryEntry> EnumerateRegistryEntryVersions(RegistryKey typeLibKey)
+        private static IEnumerable<ComTypeRegistryEntry> EnumerateRegistryEntryVersions(RegistryKey typeLibKey, Guid guid)
         {
             // There can be more than one registered item for each GUID.
             foreach (var versionKey in EnumerateSubKeys(typeLibKey))
@@ -113,7 +136,9 @@ namespace Kavod.ComReflection
                     yield return new ComTypeRegistryEntry()
                     {
                         FilePath = win32Path != string.Empty ? win32Path : win64Path,
-                        Name = name
+                        Name = name,
+                        Version = version,
+                        Guid = guid
                     };
                 }
             }
@@ -176,6 +201,10 @@ namespace Kavod.ComReflection
             internal string FilePath;
 
             internal string Name;
+
+            internal Version Version;
+
+            internal Guid Guid;
         }
     }
 }

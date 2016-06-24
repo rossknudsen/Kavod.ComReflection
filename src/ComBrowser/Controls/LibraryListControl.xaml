@@ -33,6 +33,30 @@
                         </DataTemplate>
                     </GridViewColumn.CellTemplate>
                 </GridViewColumn>
+
+                <GridViewColumn Header="Guid">
+                    <GridViewColumn.CellTemplate>
+                        <DataTemplate DataType="vm:LibraryRegistrationViewModel">
+                            <TextBlock Text="{Binding LibraryRegistration.Guid}" />
+                        </DataTemplate>
+                    </GridViewColumn.CellTemplate>
+                </GridViewColumn>
+
+                <GridViewColumn Header="Major">
+                    <GridViewColumn.CellTemplate>
+                        <DataTemplate DataType="vm:LibraryRegistrationViewModel">
+                            <TextBlock Text="{Binding LibraryRegistration.MajorVersion}" />
+                        </DataTemplate>
+                    </GridViewColumn.CellTemplate>
+                </GridViewColumn>
+
+                <GridViewColumn Header="Minor">
+                    <GridViewColumn.CellTemplate>
+                        <DataTemplate DataType="vm:LibraryRegistrationViewModel">
+                            <TextBlock Text="{Binding LibraryRegistration.MinorVersion}" />
+                        </DataTemplate>
+                    </GridViewColumn.CellTemplate>
+                </GridViewColumn>
             </GridView>
         </ListView.View>
     </ListView>
