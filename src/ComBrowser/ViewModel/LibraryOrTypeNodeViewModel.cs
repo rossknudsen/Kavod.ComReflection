@@ -39,6 +39,10 @@ namespace ComBrowser.ViewModel
             {
                 AccessUriSource = @"\Resources\lock.png";
             }
+            foreach (var i in type.ImplementedInterfaces)
+            {
+                ChildNodes.Add(new LibraryOrTypeNodeViewModel(i));
+            }
             SetIconUriSource(type);
         }
 

@@ -124,6 +124,8 @@ namespace Kavod.ComReflection.Types
 
         public IEnumerable<string> Aliases => _aliases;
 
+        public IEnumerable<VbaType> ImplementedInterfaces => _implementedTypes;
+
         public bool IsEnum { get; }
 
         public bool IsType { get; }
@@ -143,11 +145,6 @@ namespace Kavod.ComReflection.Types
         internal void AddImplementedType(VbaType implType)
         {
             _implementedTypes.Add(implType);
-        }
-
-        internal void AddImplementedTypes(IEnumerable<VbaType> implTypes)
-        {
-            _implementedTypes.AddRange(implTypes);
         }
 
         public void AddAlias(string alias)
