@@ -7,6 +7,9 @@ namespace ComBrowser.ViewModel
 {
     public class LibraryOrTypeNodeViewModel : ViewModelBase
     {
+        private static readonly Dictionary<VbaType, LibraryOrTypeNodeViewModel> _vmRegistry 
+            = new Dictionary<VbaType, LibraryOrTypeNodeViewModel>();
+
         public LibraryOrTypeNodeViewModel(TypeLibrary library)
         {
             TypeLibrary = library;
@@ -19,8 +22,7 @@ namespace ComBrowser.ViewModel
 
             foreach (var t in library.UserDefinedTypes)
             {
-                ChildNodes.Add(new LibraryOrTypeNodeViewModel(t));
-                TypesOrMembers.Add(new MemberViewModel(t));
+                GetViewModelForVbaType(t);
             }
         }
 
@@ -44,6 +46,17 @@ namespace ComBrowser.ViewModel
                 ChildNodes.Add(new LibraryOrTypeNodeViewModel(i));
             }
             SetIconUriSource(type);
+        }
+
+        private void GetViewModelForVbaType(VbaType type)
+        {
+            LibraryOrTypeNodeViewModel vm;
+            if (!_vmRegistry.TryGetValue(type, out vm))
+            {
+                vm = new LibraryOrTypeNodeViewModel(type);
+                _vmRegistry[type] = vm;
+            }
+            ChildNodes.Add(vm);
         }
 
         private void SetIconUriSource(VbaType type)
