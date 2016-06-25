@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 
@@ -7,9 +7,18 @@ namespace Kavod.ComReflection
 {
     public class TypeLibraries
     {
-        private readonly IList<TypeLibrary> _loadedLibraries = new List<TypeLibrary>();
+        private const string StdOleLibGuidString = "{00020430-0000-0000-C000-000000000046}";
+        internal static readonly Guid StdOleLibGuid = new Guid(StdOleLibGuidString);
 
-        public IEnumerable<TypeLibrary> LoadedLibraries => _loadedLibraries;
+        private readonly ObservableCollection<TypeLibrary> _libraries;
+
+        public TypeLibraries()
+        {
+            _libraries = new ObservableCollection<TypeLibrary>();
+            LoadedLibraries = new ReadOnlyObservableCollection<TypeLibrary>(_libraries);
+        }
+
+        public ReadOnlyObservableCollection<TypeLibrary> LoadedLibraries { get; }
 
         public TypeLibrary LoadLibrary(LibraryRegistration registration)
         {
@@ -17,7 +26,7 @@ namespace Kavod.ComReflection
             if (library == null)
             {
                 library = new TypeLibrary(registration.FilePath, this);
-                _loadedLibraries.Add(library);
+                _libraries.Add(library);
             }
             return library;
         }
@@ -29,7 +38,7 @@ namespace Kavod.ComReflection
             if (library == null)
             {
                 library = new TypeLibrary(typeLib, this);
-                _loadedLibraries.Add(library);
+                _libraries.Add(library);
             }
             return library;
         }
@@ -41,7 +50,7 @@ namespace Kavod.ComReflection
             {
                 var reg = LibraryRegistration.GetComTypeRegistryEntry(libGuid);
                 library = new TypeLibrary(reg.FilePath, this);
-                _loadedLibraries.Add(library);
+                _libraries.Add(library);
             }
             return library;
         }

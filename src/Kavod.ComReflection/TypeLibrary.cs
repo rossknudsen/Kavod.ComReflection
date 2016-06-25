@@ -18,8 +18,6 @@ namespace Kavod.ComReflection
 {
     public class TypeLibrary : IVbaTypeRepository
     {
-        private const string StdOleLibGuidString = "{00020430-0000-0000-C000-000000000046}";
-        private static readonly Guid StdOleLibGuid = new Guid(StdOleLibGuidString);
         private static readonly VbaType[] _primitives = {
             Boolean.Instance,
             String.Instance,
@@ -153,7 +151,7 @@ namespace Kavod.ComReflection
                     return loadedType;
 
                 case VarEnum.VT_UNKNOWN:
-                    var stdOleLib = _typeLibraries.LoadLibrary(StdOleLibGuid);
+                    var stdOleLib = _typeLibraries.LoadLibrary(TypeLibraries.StdOleLibGuid);
                     return stdOleLib.UserDefinedTypes.First(t => t.Name == "IUnknown");
 
                 case VarEnum.VT_CARRAY:
