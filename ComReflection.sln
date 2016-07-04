@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kavod.ComReflection", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComBrowser", "src\ComBrowser\ComBrowser.csproj", "{9778BC13-882A-4F12-821A-378AAF50BB50}"
 EndProject
+Project("{FF286327-C783-4F7A-AB73-9BCBAD0D4460}") = "Kavod.ComReflection.Nuget", "src\Kavod.ComReflection.Nuget\Kavod.ComReflection.Nuget.nuproj", "{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,22 @@ Global
 		{9778BC13-882A-4F12-821A-378AAF50BB50}.Release|x64.Build.0 = Release|Any CPU
 		{9778BC13-882A-4F12-821A-378AAF50BB50}.Release|x86.ActiveCfg = Release|Any CPU
 		{9778BC13-882A-4F12-821A-378AAF50BB50}.Release|x86.Build.0 = Release|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Debug|ARM.Build.0 = Debug|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Debug|x64.Build.0 = Debug|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Debug|x86.Build.0 = Debug|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Release|ARM.ActiveCfg = Release|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Release|ARM.Build.0 = Release|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Release|x64.ActiveCfg = Release|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Release|x64.Build.0 = Release|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Release|x86.ActiveCfg = Release|Any CPU
+		{97A02BF1-720C-4EAD-ABA0-FD762FA9AD39}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

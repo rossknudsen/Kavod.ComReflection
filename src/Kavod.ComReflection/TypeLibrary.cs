@@ -138,7 +138,7 @@ namespace Kavod.ComReflection
             switch (vt)
             {
                 case VarEnum.VT_PTR:
-                    tdesc2 = Marshal.PtrToStructure<ComTypes.TYPEDESC>(tdesc.lpValue);
+                    tdesc2 = (ComTypes.TYPEDESC) Marshal.PtrToStructure(tdesc.lpValue, typeof(ComTypes.TYPEDESC));
                     return GetVbaType(tdesc2, context);
 
                 case VarEnum.VT_USERDEFINED:
@@ -155,7 +155,7 @@ namespace Kavod.ComReflection
                     return stdOleLib.UserDefinedTypes.First(t => t.Name == "IUnknown");
 
                 case VarEnum.VT_CARRAY:
-                    tdesc2 = Marshal.PtrToStructure<ComTypes.TYPEDESC>(tdesc.lpValue);
+                    tdesc2 = (ComTypes.TYPEDESC) Marshal.PtrToStructure(tdesc.lpValue, typeof(ComTypes.TYPEDESC));
                     dynamic arrayType = GetVbaType(tdesc2, context);
                     return Array.GetInstance(arrayType);
                 // lpValue is actually an ARRAYDESC structure containing dimension info.

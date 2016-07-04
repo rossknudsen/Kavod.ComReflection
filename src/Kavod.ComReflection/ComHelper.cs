@@ -63,8 +63,13 @@ namespace Kavod.ComReflection
 
         internal static ComTypes.ITypeInfo GetRefTypeInfo(ComTypes.TYPEDESC tdesc, ComTypes.ITypeInfo context)
         {
+            int href;
+            unchecked
+            {
+                href = (int)(tdesc.lpValue.ToInt64() & 0xFFFFFFFF);
+            }
             ComTypes.ITypeInfo refTypeInfo;
-            context.GetRefTypeInfo(tdesc.lpValue.ToInt32(), out refTypeInfo);
+            context.GetRefTypeInfo(href, out refTypeInfo);
             return refTypeInfo;
         }
 
@@ -82,7 +87,7 @@ namespace Kavod.ComReflection
         {
             IntPtr ptr;
             typeLib.GetLibAttr(out ptr);
-            var typeLibAttr = Marshal.PtrToStructure<ComTypes.TYPELIBATTR>(ptr);
+            var typeLibAttr = (ComTypes.TYPELIBATTR) Marshal.PtrToStructure(ptr, typeof(ComTypes.TYPELIBATTR));
             typeLib.ReleaseTLibAttr(ptr);
             return typeLibAttr;
         }
@@ -156,7 +161,7 @@ namespace Kavod.ComReflection
             {
                 IntPtr pFuncDesc;
                 typeInfo.GetFuncDesc(iFunc, out pFuncDesc);
-                var funcDesc = Marshal.PtrToStructure<ComTypes.FUNCDESC>(pFuncDesc);
+                var funcDesc = (ComTypes.FUNCDESC) Marshal.PtrToStructure(pFuncDesc, typeof(ComTypes.FUNCDESC));
                 yield return funcDesc;
                 typeInfo.ReleaseFuncDesc(pFuncDesc);
             }
@@ -166,7 +171,7 @@ namespace Kavod.ComReflection
         {
             IntPtr pTypeAttr;
             typeInfo.GetTypeAttr(out pTypeAttr);
-            var typeAttr = Marshal.PtrToStructure<ComTypes.TYPEATTR>(pTypeAttr);
+            var typeAttr = (ComTypes.TYPEATTR) Marshal.PtrToStructure(pTypeAttr, typeof(ComTypes.TYPEATTR));
             typeInfo.ReleaseTypeAttr(pTypeAttr);
             return typeAttr;
         }
@@ -182,7 +187,7 @@ namespace Kavod.ComReflection
             {
                 IntPtr pVarDesc;
                 typeInfo.GetVarDesc(iVar, out pVarDesc);
-                var varDesc = Marshal.PtrToStructure<ComTypes.VARDESC>(pVarDesc);
+                var varDesc = (ComTypes.VARDESC) Marshal.PtrToStructure(pVarDesc, typeof(ComTypes.VARDESC));
                 yield return varDesc;
                 typeInfo.ReleaseVarDesc(pVarDesc);
             }
@@ -192,9 +197,10 @@ namespace Kavod.ComReflection
         {
             for (var iParam = 0; iParam < funcDesc.cParams; iParam++)
             {
-                yield return Marshal.PtrToStructure<ComTypes.ELEMDESC>(
+                yield return (ComTypes.ELEMDESC) Marshal.PtrToStructure(
                     new IntPtr(funcDesc.lprgelemdescParam.ToInt64() +
-                               Marshal.SizeOf(typeof(ComTypes.ELEMDESC)) * iParam));
+                               Marshal.SizeOf(typeof(ComTypes.ELEMDESC)) * iParam),
+                    typeof(ComTypes.ELEMDESC));
             }
         }
 
